@@ -1,1 +1,63 @@
 /* blanc */
+
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+
+:root {
+    --bg-color: #422e5a;
+    --text-color: #fafafa;
+    --sidebar-color: #6b4599;
+    --hover-color: #59387a;
+}
+
+[data-theme="light"] {
+    --bg-color: #20693c;
+    --text-color: #b4b4b4;
+    --sidebar-color: #2e9254;
+    --hover-color: #267a46;
+}
+
+html, body{
+    background-color: var(--bg-color);
+    height: 100%;
+    margin: 0;
+}
+
+#sidebar{
+    height: 100vh;
+    width: 15%;
+    background-color: var(--sidebar-color);
+}
+
+#title {
+    color: var(--text-color);
+    text-align: center;
+    font-family: 'Permanent Marker', cursive;
+    margin-top: 10px;
+}
+
+#chatcontainer {
+    padding: 10px;
+    background-color: var(--bg-color);
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px auto;
+    border-radius: 8px;
+    text-align: right;
+    &:hover {
+        background-color: var(--hover-color);
+        cursor: pointer;
+    }
+}
+
+#chatitle {
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 5px 10px;
+}
+
+#volumeSlider {
+  width: 200px;
+  accent-color: #04AA6D; /* Green thumb and track */
+}

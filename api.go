@@ -1,10 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"html"
 	"log"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -40,7 +44,65 @@ func serveEndpoints(router *gin.Engine) {
 
 			c.ShouldBindBodyWithJSON(&body)
 
-			log.Printf("username: %s", body.Username)
+			var username string = body.Username
+			var password string = body.Password
+			var email string = body.Email
+
+			username = html.EscapeString(username)
+
+			//Check if email is valid
+			var matched bool
+			matched, _ = regexp.MatchString(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, email)
+			if !matched {
+				c.JSON(200, gin.H{"status": "error", "message": "email is invalid"})
+				return
+			}
+
+			//Check if the username already exists
+			var dbErr error
+			var db *gorm.DB
+			db, dbErr = connectDB()
+			if dbErr != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
+				log.Print(dbErr.Error())
+				return
+			}
+
+			var existingUser string
+
+			var row *sql.Row = db.Raw(
+				"SELECT username FROM users WHERE username = ? OR email = ? LIMIT 1",
+				username,
+				email,
+			).Row()
+
+			check := row.Scan(&existingUser)
+
+			if check != sql.ErrNoRows {
+				c.JSON(200, gin.H{"status": "error", "message": "An account with that username already exists!"})
+				return
+			}
+
+			//Hash the password
+			var bytes []byte
+			var hashError error
+			bytes, hashError = bcrypt.GenerateFromPassword([]byte(password), 14)
+			if hashError != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error encrypting password :("})
+				return
+			}
+
+			var passwordHash string = string(bytes)
+			log.Print(passwordHash)
+
+			db.Exec(
+				"INSERT INTO users (username, password, email) VALUES (?, ?, ?)",
+				username,
+				passwordHash,
+				email,
+			)
+
+			c.JSON(200, gin.H{"status": "success", "message": "Account created successfully!"})
 		})
 	}
 }

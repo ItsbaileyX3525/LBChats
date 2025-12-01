@@ -19,6 +19,7 @@ func main() {
 	dbUser = os.Getenv("DBUSER")
 	dbPass = os.Getenv("DBPASS")
 
+	//gin.SetMode(gin.ReleaseMode) //uncomment prod
 	router := gin.Default()
 
 	serveEndpoints(router)

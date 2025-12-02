@@ -31,8 +31,123 @@ func serveEndpoints(router *gin.Engine) {
 			c.JSON(200, gin.H{"status": "success", "message": "endpoint working probs"})
 		})
 
-		//Account creation stuff
+		//TODO: Add turnstile stuff to the account create/login methods
 
+		api.POST("logout", func(c *gin.Context) {
+			var cookie string
+			var err error
+			cookie, err = c.Cookie("session_id")
+
+			var db *gorm.DB
+			var dbErr error
+			db, dbErr = connectDB()
+			if dbErr != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
+				return
+			}
+
+			if err != nil {
+				db.Delete(&Session{}, "id = ?", cookie)
+			}
+
+			c.SetCookie(
+				"session_id",
+				"",
+				-1,
+				"/",
+				"",
+				false,
+				true,
+			)
+
+			c.JSON(200, gin.H{"status": "success", "message": "logged out successfully."})
+		})
+
+		api.POST("login", func(c *gin.Context) {
+			type bodyData struct {
+				Username string `json:"username"`
+				Password string `json:"password"`
+			}
+
+			var body bodyData
+
+			c.ShouldBindBodyWithJSON(&body)
+
+			var username = body.Username
+			var password = body.Password
+			var err error
+
+			username = html.EscapeString(username)
+
+			var db *gorm.DB
+			var dbErr error
+			db, dbErr = connectDB()
+			if dbErr != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
+				return
+			}
+
+			var passwordHash string
+
+			var passwordRead *sql.Row = db.Raw(
+				"SELECT password FROM users WHERE username = ?",
+				username,
+			).Row()
+
+			err = passwordRead.Scan(&passwordHash)
+			if err == sql.ErrNoRows { //No username with account
+				c.JSON(200, gin.H{"status": "error", "message": "No account found"})
+				return
+			}
+			if err != sql.ErrNoRows && err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error reading database"})
+				return
+			}
+
+			err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(password))
+			if err == bcrypt.ErrMismatchedHashAndPassword {
+				c.JSON(200, gin.H{"status": "error", "message": "Incorrect password"})
+				return
+			}
+			if err != bcrypt.ErrMismatchedHashAndPassword && err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error comparing password hashes", "error": err.Error()})
+				return
+			}
+
+			var userID uint
+
+			var userIDFetch *sql.Row = db.Raw(
+				"SELECT userID FROM users WHERE username = ?",
+				username,
+			).Row()
+
+			err = userIDFetch.Scan(&userID)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "idek how this happened."})
+				return
+			}
+
+			var sessionID string
+			sessionID, err = createSession(db, userID)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "error creating a session"})
+				return
+			}
+
+			c.SetCookie(
+				"session_id",
+				sessionID,
+				86400,
+				"/",
+				"",
+				false,
+				true,
+			)
+
+			c.JSON(200, gin.H{"status": "success", "message": "Logged in successfully!"})
+		})
+
+		//Account creation stuff
 		api.POST("createAccount", func(c *gin.Context) {
 			type bodyData struct {
 				Username string `json:"username"`
@@ -55,6 +170,22 @@ func serveEndpoints(router *gin.Engine) {
 			matched, _ = regexp.MatchString(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, email)
 			if !matched {
 				c.JSON(200, gin.H{"status": "error", "message": "email is invalid"})
+				return
+			}
+
+			if len(password) < 8 {
+				c.JSON(200, gin.H{"status": "error", "message": "Password must be atleast 8 chars long!"})
+				return
+			}
+
+			matched, _ = regexp.MatchString(`\d`, password)
+			if !matched {
+				c.JSON(200, gin.H{"status": "error", "message": "Password must contain atleast 1 number!"})
+				return
+			}
+
+			if len(username) < 4 {
+				c.JSON(200, gin.H{"status": "error", "message": "username must be atleast 4 chars long!"})
 				return
 			}
 
@@ -100,6 +231,36 @@ func serveEndpoints(router *gin.Engine) {
 				username,
 				passwordHash,
 				email,
+			)
+
+			var userID uint
+
+			var userIDFetch *sql.Row = db.Raw(
+				"SELECT userID FROM users WHERE username = ?",
+				username,
+			).Row()
+
+			check = userIDFetch.Scan(&userID)
+			if check != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "idek how this happened."})
+				return
+			}
+
+			var sessionID string
+			sessionID, check = createSession(db, userID)
+			if check != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "error creating a session"})
+				return
+			}
+
+			c.SetCookie(
+				"session_id",
+				sessionID,
+				86400,
+				"/",
+				"",
+				false,
+				true,
 			)
 
 			c.JSON(200, gin.H{"status": "success", "message": "Account created successfully!"})

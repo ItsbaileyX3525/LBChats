@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"os"
 	"path/filepath"
 	"time"
@@ -71,4 +72,23 @@ func createSession(db *gorm.DB, userID uint) (string, error) {
 	}
 
 	return token, nil
+}
+
+func validateCookie(db *gorm.DB, c *gin.Context) (*Session, error) {
+	var cookie string
+	var err error
+	cookie, err = c.Cookie("session_id")
+
+	var session Session
+	err = db.First(&session, "id = ?", cookie).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if time.Now().After(session.ExpiresAt) {
+		db.Delete(&session)
+		return nil, errors.New("Session expired")
+	}
+
+	return &session, nil
 }

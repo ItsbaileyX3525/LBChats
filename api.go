@@ -33,6 +33,36 @@ func serveEndpoints(router *gin.Engine) {
 
 		//TODO: Add turnstile stuff to the account create/login methods
 
+		api.POST("logout", func(c *gin.Context) {
+			var cookie string
+			var err error
+			cookie, err = c.Cookie("session_id")
+
+			var db *gorm.DB
+			var dbErr error
+			db, dbErr = connectDB()
+			if dbErr != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
+				return
+			}
+
+			if err != nil {
+				db.Delete(&Session{}, "id = ?", cookie)
+			}
+
+			c.SetCookie(
+				"session_id",
+				"",
+				-1,
+				"/",
+				"",
+				false,
+				true,
+			)
+
+			c.JSON(200, gin.H{"status": "success", "message": "logged out successfully."})
+		})
+
 		api.POST("login", func(c *gin.Context) {
 			type bodyData struct {
 				Username string `json:"username"`

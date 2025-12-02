@@ -41,7 +41,7 @@ func main() {
 		//return
 	}
 
-	serveEndpoints(router)
+	serveEndpoints(router, db)
 	serveHTML(router)
 	createAuth(router, db)
 

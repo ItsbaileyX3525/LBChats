@@ -24,7 +24,7 @@ func connectDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func serveEndpoints(router *gin.Engine) {
+func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 	var api = router.Group("api")
 	{
 		api.GET("test", func(c *gin.Context) {
@@ -34,24 +34,15 @@ func serveEndpoints(router *gin.Engine) {
 		//TODO: Add turnstile stuff to the account create/login methods
 
 		api.POST("validateCookie", func(c *gin.Context) {
-			var db *gorm.DB
-			var err error
-			db, err = connectDB()
-			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
-				return
-			}
-
 			var session *Session
+			var err error
 			session, err = validateCookie(db, c)
 			if err != nil {
 				c.JSON(200, gin.H{"status": "error", "message": "Unauthorised"})
 				return
 			}
 
-			c.Set("userID", session.UserID)
-
-			c.Next()
+			c.JSON(200, gin.H{"status": "success", "message": "Valid session", "userID": session.UserID, "username": session.Username})
 		})
 
 		api.POST("logout", func(c *gin.Context) {
@@ -298,6 +289,39 @@ func serveEndpoints(router *gin.Engine) {
 			)
 
 			c.JSON(200, gin.H{"status": "success", "message": "Account created successfully!"})
+		})
+	}
+
+	var protectedApi = router.Group("api")
+	protectedApi.Use(sessionMiddleware(db))
+	{
+		protectedApi.POST("uploadMessage", func(c *gin.Context) {
+			type bodyData struct {
+				Message string `json:"message"`
+			}
+
+			var body bodyData
+			if err := c.ShouldBindBodyWithJSON(&body); err != nil {
+				c.JSON(400, gin.H{"status": "error", "message": "Invalid request body"})
+				return
+			}
+
+			userID, exists := c.Get("userID")
+			if !exists {
+				c.JSON(401, gin.H{"status": "error", "message": "Unauthorised"})
+				return
+			}
+
+			username, _ := c.Get("username")
+
+			// TODO: Save the message to the database
+			c.JSON(200, gin.H{
+				"status":   "success",
+				"message":  "Message received",
+				"userID":   userID,
+				"username": username,
+				"content":  body.Message,
+			})
 		})
 	}
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Index</title>
-  <link rel="stylesheet" href="..\assets\css\index.css">
+  <link rel="stylesheet" href="../assets/css/index.css">
 </head>
 <body>
   
@@ -20,12 +20,22 @@
 
   <div id="actionbarcontainer">
     <div id="actionbar">
+      <div id="profile">
+        <img src="../assets/images/profile.png" alt="Profile Picture" id="profilepic">
+      </div>
       <button id="newchatbtn">+ New Chat</button>
-      <input type="range" min="0" max="100" value="50" id="volumeSlider">
-      
+      <input type="range" min="0" max="100" value="50" id="volumeslider">
+      <button id="themeToggle" aria-label="Toggle theme" title="Toggle theme">🌙</button>
     </div>
   </div>
 
-  
+  <div id="chatbarcontainer">
+    <form id="chatbarform" action="#" onsubmit="return false;">
+      <input id="chatinput" type="text" placeholder="Type a message..." autocomplete="off" />
+      <button id="sendbtn" type="submit">Send</button>
+    </form>
+  </div>
+
+  <script src="../assets/js/index.js"></script>
 </body>
 </html>

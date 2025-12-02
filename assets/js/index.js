@@ -1,36 +1,37 @@
-document.addEventListener('DOMContentLoaded', () => {
-	const toggle = document.getElementById('themeToggle');
-	const root = document.documentElement;
+document.addEventListener('DOMContentLoaded', function () {
+  var root = document.documentElement;
+  var themeToggle = document.getElementById('themeToggle');
 
-	if (!toggle) return;
+  var moonSVG = '<svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="currentColor"/></svg>';
+  var sunSVG = '<svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-	const applyTheme = (theme) => {
-		if (theme === 'light') {
-			root.setAttribute('data-theme', 'light');
-			toggle.textContent = '☀️';
-			toggle.classList.add('light');
-		} else {
-			root.removeAttribute('data-theme');
-			toggle.textContent = '🌙';
-			toggle.classList.remove('light');
-		}
-	};
+  var saved = localStorage.getItem('lbchats-theme');
+  if (saved === 'light') {
+    root.setAttribute('data-theme', 'light');
+    if (themeToggle) themeToggle.innerHTML = sunSVG;
+  } else {
+    root.removeAttribute('data-theme');
+    if (themeToggle) themeToggle.innerHTML = moonSVG;
+  }
 
-
-	const saved = localStorage.getItem('lbchats-theme');
-	applyTheme(saved === 'light' ? 'light' : 'dark');
-
-	toggle.addEventListener('click', () => {
-		const currentIsLight = root.getAttribute('data-theme') === 'light';
-		const next = currentIsLight ? 'dark' : 'light';
-		applyTheme(next);
-		localStorage.setItem('lbchats-theme', next === 'light' ? 'light' : 'dark');
-	});
-
-	toggle.addEventListener('keydown', (e) => {
-		if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
-			toggle.click();
-		}
-	});
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+      var isLight = root.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        root.removeAttribute('data-theme');
+        localStorage.setItem('lbchats-theme', 'dark');
+        themeToggle.innerHTML = moonSVG;
+      } else {
+        root.setAttribute('data-theme', 'light');
+        localStorage.setItem('lbchats-theme', 'light');
+        themeToggle.innerHTML = sunSVG;
+      }
+    });
+    themeToggle.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        themeToggle.click();
+      }
+    });
+  }
 });

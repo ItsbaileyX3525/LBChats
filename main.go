@@ -1,12 +1,14 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 )
 
 var dbName string
@@ -31,8 +33,17 @@ func main() {
 	store := cookie.NewStore([]byte(secretKey))
 	router.Use(sessions.Sessions("lesession", store))
 
+	var db *gorm.DB
+	var err error
+	db, err = connectDB()
+	if err != nil {
+		log.Print("Database not initialised or whatever")
+		//return
+	}
+
 	serveEndpoints(router)
 	serveHTML(router)
+	createAuth(router, db)
 
 	router.Static("/assets", "./assets")
 

@@ -33,6 +33,27 @@ func serveEndpoints(router *gin.Engine) {
 
 		//TODO: Add turnstile stuff to the account create/login methods
 
+		api.POST("validateCookie", func(c *gin.Context) {
+			var db *gorm.DB
+			var err error
+			db, err = connectDB()
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
+				return
+			}
+
+			var session *Session
+			session, err = validateCookie(db, c)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Unauthorised"})
+				return
+			}
+
+			c.Set("userID", session.UserID)
+
+			c.Next()
+		})
+
 		api.POST("logout", func(c *gin.Context) {
 			var cookie string
 			var err error
@@ -127,8 +148,21 @@ func serveEndpoints(router *gin.Engine) {
 				return
 			}
 
+			var email string
+
+			var emailFetch *sql.Row = db.Raw(
+				"SELECT email FROM users WHERE username = ?",
+				username,
+			).Row()
+
+			err = emailFetch.Scan(&email)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "idek how this happened."})
+				return
+			}
+
 			var sessionID string
-			sessionID, err = createSession(db, userID)
+			sessionID, err = createSession(db, userID, username, email)
 			if err != nil {
 				c.JSON(200, gin.H{"status": "error", "message": "error creating a session"})
 				return
@@ -247,7 +281,7 @@ func serveEndpoints(router *gin.Engine) {
 			}
 
 			var sessionID string
-			sessionID, check = createSession(db, userID)
+			sessionID, check = createSession(db, userID, username, email)
 			if check != nil {
 				c.JSON(200, gin.H{"status": "error", "message": "error creating a session"})
 				return

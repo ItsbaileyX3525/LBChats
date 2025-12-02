@@ -12,6 +12,14 @@ import (
 	"gorm.io/gorm"
 )
 
+type Session struct {
+	ID        string `gorm:"primaryKey"`
+	UserID    uint
+	Email     string
+	Username  string
+	ExpiresAt time.Time
+}
+
 func serveHTML(router *gin.Engine) {
 	router.NoRoute(func(c *gin.Context) {
 		if c.Request.Method == "GET" {
@@ -46,13 +54,7 @@ func serveHTML(router *gin.Engine) {
 	})
 }
 
-type Session struct {
-	ID        string `gorm:"primaryKey"`
-	UserID    uint
-	ExpiresAt time.Time
-}
-
-func createSession(db *gorm.DB, userID uint) (string, error) {
+func createSession(db *gorm.DB, userID uint, username string, email string) (string, error) {
 	var tokenBytes []byte = make([]byte, 32)
 	var err error
 	_, err = rand.Read(tokenBytes)
@@ -64,6 +66,8 @@ func createSession(db *gorm.DB, userID uint) (string, error) {
 	session := Session{
 		ID:        token,
 		UserID:    userID,
+		Username:  username,
+		Email:     email,
 		ExpiresAt: time.Now().Add(24 * time.Hour),
 	}
 
@@ -91,4 +95,21 @@ func validateCookie(db *gorm.DB, c *gin.Context) (*Session, error) {
 	}
 
 	return &session, nil
+}
+
+func sessionMiddleware(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var session *Session
+		var err error
+		session, err = validateCookie(db, c)
+		if err != nil {
+			c.AbortWithStatusJSON(401, gin.H{"status": "error", "message": "unauthorised"})
+		}
+
+		c.Set("userID", session.UserID)
+		c.Set("email", session.Email)
+		c.Set("username", session.Username)
+
+		c.Next()
+	}
 }

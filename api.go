@@ -84,6 +84,36 @@ func serveEndpoints(router *gin.Engine) {
 				return
 			}
 
+			var userID uint
+
+			var userIDFetch *sql.Row = db.Raw(
+				"SELECT userID FROM users WHERE username = ?",
+				username,
+			).Row()
+
+			err = userIDFetch.Scan(&userID)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "idek how this happened."})
+				return
+			}
+
+			var sessionID string
+			sessionID, err = createSession(db, userID)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "error creating a session"})
+				return
+			}
+
+			c.SetCookie(
+				"session_id",
+				sessionID,
+				86400,
+				"/",
+				"",
+				false,
+				true,
+			)
+
 			c.JSON(200, gin.H{"status": "success", "message": "Logged in successfully!"})
 		})
 
@@ -171,6 +201,36 @@ func serveEndpoints(router *gin.Engine) {
 				username,
 				passwordHash,
 				email,
+			)
+
+			var userID uint
+
+			var userIDFetch *sql.Row = db.Raw(
+				"SELECT userID FROM users WHERE username = ?",
+				username,
+			).Row()
+
+			check = userIDFetch.Scan(&userID)
+			if check != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "idek how this happened."})
+				return
+			}
+
+			var sessionID string
+			sessionID, check = createSession(db, userID)
+			if check != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "error creating a session"})
+				return
+			}
+
+			c.SetCookie(
+				"session_id",
+				sessionID,
+				86400,
+				"/",
+				"",
+				false,
+				true,
 			)
 
 			c.JSON(200, gin.H{"status": "success", "message": "Account created successfully!"})

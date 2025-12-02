@@ -1,10 +1,14 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func serveHTML(router *gin.Engine) {
@@ -39,4 +43,32 @@ func serveHTML(router *gin.Engine) {
 			c.File("./public/404.html")
 		}
 	})
+}
+
+type Session struct {
+	ID        string `gorm:"primaryKey"`
+	UserID    uint
+	ExpiresAt time.Time
+}
+
+func createSession(db *gorm.DB, userID uint) (string, error) {
+	var tokenBytes []byte = make([]byte, 32)
+	var err error
+	_, err = rand.Read(tokenBytes)
+	if err != nil {
+		return "", err
+	}
+	var token string = hex.EncodeToString(tokenBytes)
+
+	session := Session{
+		ID:        token,
+		UserID:    userID,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	if err = db.Create(&session).Error; err != nil {
+		return "", err
+	}
+
+	return token, nil
 }

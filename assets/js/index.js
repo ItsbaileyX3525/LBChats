@@ -39,6 +39,15 @@ function loadThemes() {
   }
 }
 
+async function createChatroom(roomName) {
+    const resp = await fetch("/api/createChannel", {
+        method: "POST",
+        body: JSON.stringify({
+            "channel_name" : roomName,
+        })
+    })
+}
+
 async function joinChatroom(roomID) {
     return new Promise( async (resolve, reject) => {
         const resp = await fetch("/api/joinChannel", {
@@ -57,7 +66,7 @@ async function joinChatroom(roomID) {
 
         console.log("Fetch data:", data)
 
-        if (data.status) {
+        if (data.status == "true") {
             resolve("Joined channel successfully!")
         } else {
             reject(new Error(data.message))
@@ -94,7 +103,7 @@ async function loadUserData() {
     const resp = await fetch("/api/profile", {
         method: "POST",
         body: JSON.stringify({
-            
+
         })
     })
 }

@@ -295,7 +295,64 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 	var protectedApi = router.Group("api")
 	protectedApi.Use(sessionMiddleware(db))
 	{
+		protectedApi.POST("userChannels", func(c *gin.Context) {
+			type channelsStruct struct {
+				channelID uint
+			}
+
+			var channels []channelsStruct
+
+			var dbErr error
+			var db *gorm.DB
+			db, dbErr = connectDB()
+			if dbErr != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
+				log.Print(dbErr.Error())
+				return
+			}
+
+			var err error
+			var userID uint = c.GetUint("userID")
+
+			err = db.Raw(
+				"SELECT * FROM user_channels WHERE user_id = ?",
+				userID,
+			).Scan(&channels).Error
+
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error finding data on this user."})
+				return
+			}
+
+			log.Print(channels)
+		})
+
 		protectedApi.POST("createChannel", func(c *gin.Context) {
+			type bodyData struct {
+				ChannelName string `json:"channel_name"`
+			}
+
+			var body bodyData
+			var err error
+
+			if err = c.ShouldBindBodyWithJSON(&body); err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Invalid post data"})
+				return
+			}
+
+			var channelName string = body.ChannelName
+
+			var dbErr error
+			var db *gorm.DB
+			db, dbErr = connectDB()
+			if dbErr != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
+				log.Print(dbErr.Error())
+				return
+			}
+
+			log.Print(db.Error)
+			log.Printf("channel name: %s", channelName)
 		})
 
 		protectedApi.POST("joinChannel", func(c *gin.Context) {
@@ -310,8 +367,18 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			//var channelID uint = body.ChannelID
-			//var userID uint = c.GetUint("userID")
+			var channelID uint = body.ChannelID
+			var userID uint = c.GetUint("userID")
+
+			err = db.Exec(
+				"INSERT INTO user_channels (user_id, channel_id) VALUES (?, ?)",
+				userID,
+				channelID,
+			).Error
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Unable to join room, perhaps it doesn't exist?", "errorCode": "ErrNoRoom"})
+				return
+			}
 
 			c.JSON(200, gin.H{"status": "success", "message": "joined channel successfully!"})
 		})

@@ -129,7 +129,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var userID uint
 
 			var userIDFetch *sql.Row = db.Raw(
-				"SELECT userID FROM users WHERE username = ?",
+				"SELECT id FROM users WHERE username = ?",
 				username,
 			).Row()
 
@@ -261,7 +261,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var userID uint
 
 			var userIDFetch *sql.Row = db.Raw(
-				"SELECT userID FROM users WHERE username = ?",
+				"SELECT id FROM users WHERE username = ?",
 				username,
 			).Row()
 
@@ -295,14 +295,23 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 	var protectedApi = router.Group("api")
 	protectedApi.Use(sessionMiddleware(db))
 	{
+		protectedApi.POST("createChannel", func(c *gin.Context) {
+		})
+
 		protectedApi.POST("uploadMessage", func(c *gin.Context) {
 			type bodyData struct {
-				Message string `json:"message"`
+				Message   string `json:"message"`
+				ChannelID uint   `json:"channel_id"`
 			}
 
 			var body bodyData
 			if err := c.ShouldBindBodyWithJSON(&body); err != nil {
 				c.JSON(400, gin.H{"status": "error", "message": "Invalid request body"})
+				return
+			}
+
+			if len(body.Message) < 1 {
+				c.JSON(400, gin.H{"status": "error", "message": "Message content is required"})
 				return
 			}
 
@@ -312,15 +321,35 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			username, _ := c.Get("username")
+			message := Message{
+				UserID:    userID.(uint),
+				ChannelID: body.ChannelID,
+				Content:   html.EscapeString(body.Message),
+			}
 
-			// TODO: Save the message to the database
+			if err := db.Create(&message).Error; err != nil {
+				c.JSON(500, gin.H{"status": "error", "message": "Failed to save message"})
+				return
+			}
+
+			c.JSON(200, gin.H{
+				"status":  "success",
+				"message": "Message sent",
+				"data":    message,
+			})
+		})
+		protectedApi.GET("messages/:channelId", func(c *gin.Context) {
+			channelID := c.Param("channelId")
+
+			var messages []Message
+			if err := db.Preload("User").Where("channel_id = ?", channelID).Order("created_at ASC").Find(&messages).Error; err != nil {
+				c.JSON(500, gin.H{"status": "error", "message": "Failed to fetch messages"})
+				return
+			}
+
 			c.JSON(200, gin.H{
 				"status":   "success",
-				"message":  "Message received",
-				"userID":   userID,
-				"username": username,
-				"content":  body.Message,
+				"messages": messages,
 			})
 		})
 	}

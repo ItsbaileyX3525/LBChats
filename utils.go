@@ -12,12 +12,38 @@ import (
 	"gorm.io/gorm"
 )
 
+type User struct {
+	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	Username string `gorm:"size:255;not null" json:"username"`
+	Password string `gorm:"size:255;not null" json:"-"`
+	Email    string `gorm:"size:255;not null" json:"email"`
+}
+
+type Channel struct {
+	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name      string    `gorm:"size:255;not null" json:"name"`
+	OwnerID   uint      `gorm:"not null" json:"owner_id"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	Owner     User      `gorm:"foreignKey:OwnerID" json:"owner,omitempty"`
+}
+
+type Message struct {
+	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	UserID    uint      `gorm:"not null" json:"user_id"`
+	ChannelID uint      `gorm:"not null" json:"channel_id"`
+	Content   string    `gorm:"size:1000;not null" json:"content"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	User      User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Channel   Channel   `gorm:"foreignKey:ChannelID" json:"channel,omitempty"`
+}
+
 type Session struct {
-	ID        string `gorm:"primaryKey"`
-	UserID    uint
-	Email     string
-	Username  string
-	ExpiresAt time.Time
+	ID        string    `gorm:"primaryKey;size:64" json:"id"`
+	UserID    uint      `gorm:"column:user_id;not null" json:"user_id"`
+	Email     string    `gorm:"size:255;not null" json:"email"`
+	Username  string    `gorm:"size:255;not null" json:"username"`
+	ExpiresAt time.Time `gorm:"column:expires_at;not null" json:"expires_at"`
+	User      User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func serveHTML(router *gin.Engine) {
@@ -104,6 +130,7 @@ func sessionMiddleware(db *gorm.DB) gin.HandlerFunc {
 		session, err = validateCookie(db, c)
 		if err != nil {
 			c.AbortWithStatusJSON(401, gin.H{"status": "error", "message": "unauthorised"})
+			return
 		}
 
 		c.Set("userID", session.UserID)

@@ -5,6 +5,8 @@ import (
 	"gorm.io/gorm"
 )
 
+/* deprecated */
+
 func createAuth(router *gin.Engine, db *gorm.DB) {
 	auth := router.Group("/auth")
 	auth.Use(sessionMiddleware(db))

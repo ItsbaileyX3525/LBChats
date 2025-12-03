@@ -80,7 +80,7 @@ html, body {
     transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-#chatcontainer > #chatitle,
+#chatcontainer > .chatitle,
 #chatcontainer > .chat-item {
     display: block;
     width: calc(100% - 16px);
@@ -99,7 +99,7 @@ html, body {
     transition: background 0.12s ease, transform 0.06s ease;
 }
 
-#chatcontainer > #chatitle:hover,
+#chatcontainer > .chatitle:hover,
 #chatcontainer > .chat-item:hover {
     background: rgba(255,255,255,0.03);
     transform: translateY(-3px);

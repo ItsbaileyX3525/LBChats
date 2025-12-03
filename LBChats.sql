@@ -87,6 +87,16 @@ CREATE TABLE `sessions` (
   CONSTRAINT `session_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+CREATE TABLE user_channels (
+    user_id INT NOT NULL,
+    channel_id INT NOT NULL,
+    joined_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, channel_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

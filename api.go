@@ -298,6 +298,24 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 		protectedApi.POST("createChannel", func(c *gin.Context) {
 		})
 
+		protectedApi.POST("joinChannel", func(c *gin.Context) {
+			type bodyData struct {
+				ChannelID uint `json:"channel_id"`
+			}
+
+			var body bodyData
+			var err error
+			if err = c.ShouldBindBodyWithJSON(&body); err != nil {
+				c.JSON(400, gin.H{"status": "error", "message": "Invalid post data"})
+				return
+			}
+
+			//var channelID uint = body.ChannelID
+			//var userID uint = c.GetUint("userID")
+
+			c.JSON(200, gin.H{"status": "success", "message": "joined channel successfully!"})
+		})
+
 		protectedApi.POST("uploadMessage", func(c *gin.Context) {
 			type bodyData struct {
 				Message   string `json:"message"`
@@ -305,7 +323,8 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			var body bodyData
-			if err := c.ShouldBindBodyWithJSON(&body); err != nil {
+			var err error
+			if err = c.ShouldBindBodyWithJSON(&body); err != nil {
 				c.JSON(400, gin.H{"status": "error", "message": "Invalid request body"})
 				return
 			}
@@ -315,19 +334,22 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			userID, exists := c.Get("userID")
+			var userID any //I dislike this, I know the datatype SHOULD be uint
+			var exists bool
+			userID, exists = c.Get("userID")
 			if !exists {
 				c.JSON(401, gin.H{"status": "error", "message": "Unauthorised"})
 				return
 			}
 
-			message := Message{
+			var message Message
+			message = Message{
 				UserID:    userID.(uint),
 				ChannelID: body.ChannelID,
 				Content:   html.EscapeString(body.Message),
 			}
 
-			if err := db.Create(&message).Error; err != nil {
+			if err = db.Create(&message).Error; err != nil {
 				c.JSON(500, gin.H{"status": "error", "message": "Failed to save message"})
 				return
 			}
@@ -336,20 +358,6 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				"status":  "success",
 				"message": "Message sent",
 				"data":    message,
-			})
-		})
-		protectedApi.GET("messages/:channelId", func(c *gin.Context) {
-			channelID := c.Param("channelId")
-
-			var messages []Message
-			if err := db.Preload("User").Where("channel_id = ?", channelID).Order("created_at ASC").Find(&messages).Error; err != nil {
-				c.JSON(500, gin.H{"status": "error", "message": "Failed to fetch messages"})
-				return
-			}
-
-			c.JSON(200, gin.H{
-				"status":   "success",
-				"messages": messages,
 			})
 		})
 	}

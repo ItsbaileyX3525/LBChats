@@ -1,6 +1,9 @@
+import {
+    getCookie
+ } from '/assets/js/utils.js'
+
 export const wordLists = {
     "/createChatroom": async function(input) {
-        console.log("making request:", input)
         const resp = await fetch("/api/createChannel", {
             method: "POST",
             body: JSON.stringify({
@@ -17,13 +20,13 @@ export const wordLists = {
 
         console.log(data)
     },
-    "/createInvite": async function(input) {
-        console.log(input)
-
+    "/createInvite": async function() {
+        let roomID = getCookie("room")
+        console.log(roomID)
         const resp = await fetch("/api/createLink", {
             method: "POST",
             body: JSON.stringify({
-                "channel_name": input,
+                "channel_id": roomID,
             })
         })
 

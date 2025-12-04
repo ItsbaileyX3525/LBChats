@@ -383,7 +383,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 		protectedApi.POST("createLink", func(c *gin.Context) {
 			type bodyData struct {
-				ChannelName string `json:"channel_name"`
+				ChannelID string `json:"channel_id"`
 			}
 
 			var body bodyData
@@ -394,9 +394,8 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			var channelName = body.ChannelName
+			var channelID = body.ChannelID
 			var inviteLink string = createInviteLink()
-			var channelID string
 
 			var dbErr error
 			var db *gorm.DB
@@ -406,14 +405,21 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				log.Print(dbErr.Error())
 				return
 			}
+			var roomExists string
 
-			err = db.Raw(
-				"SELECT id FROM channels WHERE name = ?",
-				channelName,
-			).Scan(&channelID).Error
+			var scanErr error = db.Raw(
+				"SELECT name FROM channels WHERE id = ?",
+				channelID,
+			).Scan(&roomExists).Error
+			if scanErr != nil {
+				log.Print("error with something")
+				log.Print(scanErr)
+				c.JSON(200, gin.H{"status": "error", "message": "error with something"})
+				return
+			}
 
-			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Channel doesn't exist"})
+			if roomExists == "" {
+				c.JSON(200, gin.H{"status": "error", "message": "Room doesn't exist...?"})
 				return
 			}
 
@@ -521,17 +527,12 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			var userID any //I dislike this, I know the datatype SHOULD be uint
-			var exists bool
-			userID, exists = c.Get("userID")
-			if !exists {
-				c.JSON(200, gin.H{"status": "error", "message": "Unauthorised"})
-				return
-			}
+			var userID uint
+			userID = c.GetUint("userID")
 
 			var message Message
 			message = Message{
-				UserID:    userID.(uint),
+				UserID:    userID,
 				ChannelID: body.ChannelID,
 				Content:   html.EscapeString(body.Message),
 			}

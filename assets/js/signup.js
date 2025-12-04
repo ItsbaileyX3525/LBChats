@@ -1,7 +1,11 @@
 const form = document.getElementById("signup-form")
-
+let signedUp = false
 
 form.addEventListener("submit", async (e) => {
+    if (signedUp) {
+        return
+    }
+    signedUp = true
     e.preventDefault()
 
     let formData = new FormData(form)
@@ -17,12 +21,16 @@ form.addEventListener("submit", async (e) => {
 
     if (!resp.ok) {
         console.log("something went wrong with the fetch request")
+        signedUp = false
         return
     }
 
     const data = await resp.json()
 
     console.log(data)
-
-    console.log(formData.get("password"))
+    if (data.status == "success") {
+        return
+    } else {
+        signedUp = false
+    }
 })

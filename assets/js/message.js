@@ -1,14 +1,18 @@
+import {
+    wordLists
+} from '/assets/js/slashCommands.js'
+
 const form = document.getElementById("chatbarform")
 const chatInput = document.getElementById("chatinput")
+let validSlashCommands = []
 
-form.addEventListener("submit", async (e) => {
-    e.preventDefault()
-
-    const formData = new FormData(form)
-
-    console.log(formData.get("message"))
-
-    chatInput.value = ""
+async function submitMessage(message) {
+    const wordSplit = message.split(" ")
+    console.log(wordSplit)
+    if (validSlashCommands.includes(wordSplit[0])) {
+        wordLists[wordSplit[0]](wordSplit[1])
+    }
+    return
 
     const resp = await fetch("/api/uploadMessage", {
         method: "POST",
@@ -31,4 +35,18 @@ form.addEventListener("submit", async (e) => {
     } else {
         console.log(data.message)
     }
+}
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault()
+    const formData = new FormData(form)
+    chatInput.value = ""
+    submitMessage(formData.get("message"))
+
+})
+
+document.addEventListener("DOMContentLoaded", () => {
+    validSlashCommands = Object.keys(wordLists)
+    //console.log(validSlashCommands)
+    return
 })

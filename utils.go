@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"os"
@@ -45,6 +46,8 @@ type Session struct {
 	ExpiresAt time.Time `gorm:"column:expires_at;not null" json:"expires_at"`
 	User      User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
+
+const base62Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 func serveHTML(router *gin.Engine) {
 	router.NoRoute(func(c *gin.Context) {
@@ -139,4 +142,34 @@ func sessionMiddleware(db *gorm.DB) gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func base62Encode(n uint32) string {
+	if n == 0 {
+		return string(base62Alphabet[0])
+	}
+
+	out := make([]byte, 0, 6)
+	for n > 0 {
+		r := n % 62
+		out = append([]byte{base62Alphabet[r]}, out...)
+		n /= 62
+	}
+	return string(out)
+}
+
+func createInviteLink() string {
+	var b [4]byte
+	var err error
+	_, err = rand.Read(b[:])
+	if err != nil {
+		panic(err)
+	}
+
+	var randomInt uint32 = binary.BigEndian.Uint32(b[:])
+
+	var uniqueID string = base62Encode(randomInt)
+
+	return uniqueID
+
 }

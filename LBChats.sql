@@ -42,7 +42,7 @@ CREATE TABLE `users` (
 --
 
 CREATE TABLE `channels` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `owner_id` int(11) NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -60,7 +60,7 @@ CREATE TABLE `channels` (
 CREATE TABLE `messages` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
-  `channel_id` int(11) NOT NULL,
+  `channel_id` varchar(255) NOT NULL,
   `content` varchar(1000) NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -90,7 +90,7 @@ CREATE TABLE `sessions` (
 
 CREATE TABLE user_channels (
     user_id INT NOT NULL,
-    channel_id INT NOT NULL,
+    channel_id varchar(255) NOT NULL,
     joined_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, channel_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -327,6 +328,100 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			log.Print(channels)
 		})
 
+		protectedApi.GET("getMessages", func(c *gin.Context) {
+			type bodyData struct {
+				ChannelID string `json:"channel_id"`
+				OnPage    uint   `json:"on_page"`
+			}
+
+			type Messages struct {
+				user_id uint
+				content string
+			}
+
+			var body bodyData
+			var err error
+			err = c.ShouldBindBodyWithJSON(&body)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "invalid post data"})
+				return
+			}
+
+			var channelID = body.ChannelID
+			var onPage = body.OnPage
+
+			var messages []Messages
+
+			var dbErr error
+			var db *gorm.DB
+			db, dbErr = connectDB()
+			if dbErr != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
+				log.Print(dbErr.Error())
+				return
+			}
+
+			err = db.Raw(
+				"SELECT user_id, content FROM messages WHERE channel_id = ? LIMIT 16 offset = ? VALUES (?, ?)",
+				channelID,
+				onPage,
+			).Scan(&messages).Error
+			if err == sql.ErrNoRows {
+				c.JSON(200, gin.H{"status": "error", "message": "No messages or channel doesn't exist"})
+				return
+			}
+			if err != nil && err != sql.ErrNoRows {
+				c.JSON(200, gin.H{"status": "error", "message": "Server error idk"})
+				return
+			}
+
+		})
+
+		protectedApi.POST("createLink", func(c *gin.Context) {
+			type bodyData struct {
+				ChannelName string `json:"channel_name"`
+			}
+
+			var body bodyData
+			var err error
+			err = c.ShouldBindBodyWithJSON(&body)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "invalid post data"})
+				return
+			}
+
+			var channelName = body.ChannelName
+			var inviteLink string = createInviteLink()
+			var channelID string
+
+			var dbErr error
+			var db *gorm.DB
+			db, dbErr = connectDB()
+			if dbErr != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
+				log.Print(dbErr.Error())
+				return
+			}
+
+			err = db.Raw(
+				"SELECT id FROM channels WHERE name = ?",
+				channelName,
+			).Scan(&channelID).Error
+
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Channel doesn't exist"})
+				return
+			}
+
+			db.Exec(
+				"INSERT INTO invite_codes (channel_id, invite_code) VALUES (?, ?)",
+				channelID,
+				inviteLink,
+			)
+
+			c.JSON(200, gin.H{"status": "success", "message": "invite link created successfully!", "invite_link": inviteLink})
+		})
+
 		protectedApi.POST("createChannel", func(c *gin.Context) {
 			type bodyData struct {
 				ChannelName string `json:"channel_name"`
@@ -351,8 +446,16 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			log.Print(db.Error)
-			log.Printf("channel name: %s", channelName)
+			var channelUuid uuid.UUID = uuid.New()
+
+			db.Exec(
+				"INSERT INTO channels (id, name, owner_id) VALUES (?, ?, ?)",
+				channelUuid,
+				channelName,
+				c.GetUint("userID"),
+			)
+
+			c.JSON(200, gin.H{"status": "success", "message": "Channel created successfully!"})
 		})
 
 		protectedApi.POST("joinChannel", func(c *gin.Context) {

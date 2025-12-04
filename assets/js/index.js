@@ -2,6 +2,8 @@ const newChatButton = document.getElementById("newchatbtn")
 const themeToggle = document.getElementById('themeToggle');
 const chatroomArea = document.getElementById("chatcontainer")
 
+let onPage = 1
+
 function loadThemes() {
   var root = document.documentElement;
 
@@ -46,6 +48,15 @@ async function createChatroom(roomName) {
             "channel_name" : roomName,
         })
     })
+
+    if (!resp.ok) {
+        console.log("error with fetch request")
+        return
+    }
+
+    const data = await resp.json()
+
+    console.log(data)
 }
 
 async function joinChatroom(roomID) {

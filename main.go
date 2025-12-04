@@ -43,7 +43,7 @@ func main() {
 
 	serveEndpoints(router, db)
 	serveHTML(router)
-	createAuth(router, db)
+	//createAuth(router, db)
 
 	router.Static("/assets", "./assets")
 

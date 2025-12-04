@@ -1,8 +1,12 @@
+import {
+    setCookie, getCookie
+} from '/assets/js/utils.js'
+
 const newChatButton = document.getElementById("newchatbtn")
 const themeToggle = document.getElementById('themeToggle');
 const chatroomArea = document.getElementById("chatcontainer")
 
-let onPage = 1
+let onPage = 0
 
 function loadThemes() {
   var root = document.documentElement;
@@ -41,24 +45,6 @@ function loadThemes() {
   }
 }
 
-async function createChatroom(roomName) {
-    const resp = await fetch("/api/createChannel", {
-        method: "POST",
-        body: JSON.stringify({
-            "channel_name" : roomName,
-        })
-    })
-
-    if (!resp.ok) {
-        console.log("error with fetch request")
-        return
-    }
-
-    const data = await resp.json()
-
-    console.log(data)
-}
-
 async function joinChatroom(roomID) {
     return new Promise( async (resolve, reject) => {
         const resp = await fetch("/api/joinChannel", {
@@ -91,7 +77,6 @@ function appendToChatList(roomID) {
     h2.innerText = `Room: ${roomID}`
     chatroomArea.appendChild(h2)
     h2.classList.add("chatitle")
-
 }
 
 async function addNewChat(roomID) {
@@ -110,16 +95,34 @@ newChatButton.addEventListener("click", () => {
     addNewChat(1)
 })
 
-async function loadUserData() {
+/*async function loadUserData() {
     const resp = await fetch("/api/profile", {
         method: "POST",
         body: JSON.stringify({
 
         })
     })
+}*/
+
+async function loadMessages() {
+    let roomID = getCookie("room")
+    console.log(roomID)
+    const resp = await fetch("/api/getMessages", {
+        method: "POST",
+        body: JSON.stringify({
+            "channel_id": roomID,
+            "on_page": onPage,
+        })
+    })
+
+    const data = await resp.json()
+
+    console.log(data)
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    setCookie("room", "public", 99999)
     loadThemes()
-    loadUserData()
+    //loadUserData()
+    loadMessages()
 });

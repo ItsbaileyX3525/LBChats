@@ -102,3 +102,9 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+-- Default data needed for the server to function
+-- 1 is the admin of the server, (the person who has
+-- Created the account first)
+INSERT INTO `channels` (`id`, `name`, `owner_id`, `created_at`) VALUES ('public', 'public', '1', '2025-12-04 19:13:51')

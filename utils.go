@@ -31,7 +31,7 @@ type Channel struct {
 type Message struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id"`
 	UserID    uint      `gorm:"not null" json:"user_id"`
-	ChannelID uint      `gorm:"not null" json:"channel_id"`
+	ChannelID string    `gorm:"not null" json:"channel_id"`
 	Content   string    `gorm:"size:1000;not null" json:"content"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	User      User      `gorm:"foreignKey:UserID" json:"user,omitempty"`

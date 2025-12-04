@@ -2,6 +2,10 @@ import {
     wordLists
 } from '/assets/js/slashCommands.js'
 
+import {
+    getCookie
+} from '/assets/js/utils.js'
+
 const form = document.getElementById("chatbarform")
 const chatInput = document.getElementById("chatinput")
 let validSlashCommands = []
@@ -12,13 +16,14 @@ async function submitMessage(message) {
     if (validSlashCommands.includes(wordSplit[0])) {
         wordLists[wordSplit[0]](wordSplit[1])
     }
-    return
-
+    const channelID = getCookie("room")
+    console.log(message)
+    console.log(channelID)
     const resp = await fetch("/api/uploadMessage", {
         method: "POST",
         body: JSON.stringify({
-            "message": formData.get("message"),
-            "channel_id" : 1
+            "message": message,
+            "channel_id" : channelID,
         })
     })
 

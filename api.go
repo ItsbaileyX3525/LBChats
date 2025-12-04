@@ -328,15 +328,15 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			log.Print(channels)
 		})
 
-		protectedApi.GET("getMessages", func(c *gin.Context) {
+		protectedApi.POST("getMessages", func(c *gin.Context) {
 			type bodyData struct {
 				ChannelID string `json:"channel_id"`
 				OnPage    uint   `json:"on_page"`
 			}
 
 			type Messages struct {
-				user_id uint
-				content string
+				UserID  uint   `gorm:"column:user_id"`
+				Content string `gorm:"column:content"`
 			}
 
 			var body bodyData
@@ -347,8 +347,9 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			var channelID = body.ChannelID
-			var onPage = body.OnPage
+			var channelID string = body.ChannelID
+			var onPage uint = body.OnPage
+			var offset uint = onPage * 16
 
 			var messages []Messages
 
@@ -362,18 +363,21 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			err = db.Raw(
-				"SELECT user_id, content FROM messages WHERE channel_id = ? LIMIT 16 offset = ? VALUES (?, ?)",
+				"SELECT user_id, content FROM messages WHERE channel_id = ? LIMIT 16 OFFSET ?",
 				channelID,
-				onPage,
+				offset,
 			).Scan(&messages).Error
-			if err == sql.ErrNoRows {
-				c.JSON(200, gin.H{"status": "error", "message": "No messages or channel doesn't exist"})
+			if err != nil {
+				c.JSON(500, gin.H{"status": "error", "message": "Server error"})
 				return
 			}
-			if err != nil && err != sql.ErrNoRows {
-				c.JSON(200, gin.H{"status": "error", "message": "Server error idk"})
+
+			if len(messages) == 0 {
+				c.JSON(200, gin.H{"status": "success", "messages": []Messages{}})
 				return
 			}
+
+			c.JSON(200, gin.H{"status": "success", "messages": messages})
 
 		})
 
@@ -489,18 +493,18 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 		protectedApi.POST("uploadMessage", func(c *gin.Context) {
 			type bodyData struct {
 				Message   string `json:"message"`
-				ChannelID uint   `json:"channel_id"`
+				ChannelID string `json:"channel_id"`
 			}
 
 			var body bodyData
 			var err error
 			if err = c.ShouldBindBodyWithJSON(&body); err != nil {
-				c.JSON(400, gin.H{"status": "error", "message": "Invalid request body"})
+				c.JSON(200, gin.H{"status": "error", "message": "Invalid request body"})
 				return
 			}
 
 			if len(body.Message) < 1 {
-				c.JSON(400, gin.H{"status": "error", "message": "Message content is required"})
+				c.JSON(200, gin.H{"status": "error", "message": "Message content is required"})
 				return
 			}
 
@@ -508,7 +512,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var exists bool
 			userID, exists = c.Get("userID")
 			if !exists {
-				c.JSON(401, gin.H{"status": "error", "message": "Unauthorised"})
+				c.JSON(200, gin.H{"status": "error", "message": "Unauthorised"})
 				return
 			}
 
@@ -520,7 +524,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			if err = db.Create(&message).Error; err != nil {
-				c.JSON(500, gin.H{"status": "error", "message": "Failed to save message"})
+				c.JSON(200, gin.H{"status": "error", "message": "Failed to save message"})
 				return
 			}
 

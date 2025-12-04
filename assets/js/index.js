@@ -50,7 +50,7 @@ async function joinChatroom(roomID) {
         const resp = await fetch("/api/joinChannel", {
             method: "POST",
             body: JSON.stringify({
-                "channel_id" : roomID,
+                "invite_link" : roomID,
             })
         })
 
@@ -92,7 +92,7 @@ async function addNewChat(roomID) {
 
 newChatButton.addEventListener("click", () => {
     console.log("Click")
-    addNewChat(1)
+    addNewChat("aabbcc")
 })
 
 /*async function loadUserData() {

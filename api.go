@@ -464,7 +464,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 		protectedApi.POST("joinChannel", func(c *gin.Context) {
 			type bodyData struct {
-				ChannelID uint `json:"channel_id"`
+				InviteLink string `json:"invite_link"`
 			}
 
 			var body bodyData
@@ -474,13 +474,26 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			var channelID uint = body.ChannelID
+			var InviteLink string = body.InviteLink
 			var userID uint = c.GetUint("userID")
+			var channelId string
+
+			var result *gorm.DB = db.Raw(
+				"SELECT channel_id FROM invite_codes WHERE invite_code = ?",
+				InviteLink,
+			).Scan(&channelId)
+			if result.Error == sql.ErrNoRows {
+				c.JSON(200, gin.H{"status": "error", "message": "invite code doesn't exist"})
+				return
+			} else if result.Error != sql.ErrNoRows && result.Error != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "database error"})
+				return
+			}
 
 			err = db.Exec(
 				"INSERT INTO user_channels (user_id, channel_id) VALUES (?, ?)",
 				userID,
-				channelID,
+				channelId,
 			).Error
 			if err != nil {
 				c.JSON(200, gin.H{"status": "error", "message": "Unable to join room, perhaps it doesn't exist?", "errorCode": "ErrNoRoom"})

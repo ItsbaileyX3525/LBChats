@@ -34,7 +34,6 @@ async function submitMessage(message) {
 
     const data = await resp.json()
 
-    //TODO: Add notifcation stuff
     if (data.status == "success") {
         console.log(data.message)
     } else {

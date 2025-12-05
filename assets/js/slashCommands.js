@@ -37,5 +37,8 @@ export const wordLists = {
 
         const data = await resp.json()
         console.log(data)
+    },
+    "/playSound": async function(input) {
+        console.log("playing sound to all")
     }
 }

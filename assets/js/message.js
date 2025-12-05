@@ -12,9 +12,9 @@ let validSlashCommands = []
 
 async function submitMessage(message) {
     const wordSplit = message.split(" ")
-    console.log(wordSplit)
     if (validSlashCommands.includes(wordSplit[0])) {
         wordLists[wordSplit[0]](wordSplit[1])
+        return
     }
     const channelID = getCookie("room")
     console.log(message)

@@ -6,6 +6,7 @@ import (
 	"html"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -335,8 +336,10 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			type Messages struct {
-				UserID  uint   `gorm:"column:user_id"`
-				Content string `gorm:"column:content"`
+				UserID    uint      `gorm:"column:user_id"`
+				Username  string    `gorm:"column:username"`
+				Content   string    `gorm:"column:content"`
+				CreatedAt time.Time `gorm:"column:created_at"`
 			}
 
 			var body bodyData
@@ -363,7 +366,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			err = db.Raw(
-				"SELECT user_id, content FROM messages WHERE channel_id = ? LIMIT 16 OFFSET ?",
+				"SELECT username, user_id, content, created_at FROM messages WHERE channel_id = ? LIMIT 16 OFFSET ?",
 				channelID,
 				offset,
 			).Scan(&messages).Error
@@ -530,9 +533,20 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var userID uint
 			userID = c.GetUint("userID")
 
+			var username string
+			var scanErr *gorm.DB = db.Raw(
+				"SELECT username FROM users WHERE id = ?",
+				userID,
+			).Scan(&username)
+			if scanErr.Error != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "user doesn't exist"})
+				return
+			}
+
 			var message Message
 			message = Message{
 				UserID:    userID,
+				Username:  username,
 				ChannelID: body.ChannelID,
 				Content:   html.EscapeString(body.Message),
 			}

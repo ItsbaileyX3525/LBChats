@@ -2,10 +2,14 @@ import {
     setCookie, getCookie
 } from '/assets/js/utils.js'
 
+import {
+    connectWebSocket
+} from '/assets/js/ws.js'
+
 const newChatButton = document.getElementById("newchatbtn")
 const themeToggle = document.getElementById('themeToggle');
 const chatroomArea = document.getElementById("chatcontainer")
-let ws = null
+const messageContainer = document.getElementById("messages")
 
 let onPage = 0
 
@@ -119,32 +123,24 @@ async function loadMessages() {
     const data = await resp.json()
 
     console.log(data)
-}
-
-
-function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    ws = new WebSocket(`${protocol}//${window.location.host}/ws`)
-
-    ws.onopen = () => {
-        console.log('WebSocket connected')
-        ws.send(JSON.stringify({
-            type: 'message',
-            content: 'Hello from the client!'
-        }))
-    }
-
-    ws.onmessage = (event) => {
-        console.log('Received:', event.data)
-    }
-
-    ws.onclose = () => {
-        console.log('WebSocket disconnected')
-        setTimeout(connectWebSocket, 3000)
-    }
-
-    ws.onerror = (error) => {
-        console.error('WebSocket error:', error)
+    for (let e of data.messages) {
+        const div = document.createElement("div")
+        const div2 = document.createElement("div")
+        const span = document.createElement("span")
+        const span2 = document.createElement("span")
+        
+        div.classList.add("message", "other")
+        span.classList.add("message-username")
+        span2.classList.add("message-time")
+        div2.classList.add("message-content")
+        
+        div.appendChild(span)
+        div.appendChild(span2)
+        div.appendChild(div2)
+        messageContainer.appendChild(div)
+        span.innerText = e.Username
+        span2.innerText = new Date(e.CreatedAt).toDateString()
+        div2.innerText = e.Content
     }
 }
 

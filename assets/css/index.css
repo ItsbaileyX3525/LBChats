@@ -307,6 +307,24 @@ html, body {
     align-self: flex-start;
 }
 
+.message.system {
+    align-self: center;
+    background: rgba(143, 122, 232, 0.1);
+    border: 1px solid rgba(143, 122, 232, 0.3);
+    max-width: 80%;
+    text-align: center;
+    font-size: 13px;
+}
+
+.message.system .message-username {
+    color: var(--accent-color);
+    font-weight: 700;
+}
+
+.message.system .message-content {
+    white-space: pre-line;
+}
+
 .message-username {
     font-weight: 600;
     font-size: 13px;

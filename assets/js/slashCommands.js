@@ -6,8 +6,20 @@ import {
     getWebSocket
 } from '/assets/js/ws.js'
 
+import {
+    addSystemMessage
+} from '/assets/js/systemMessage.js'
+
 export const wordLists = {
+    "/help": function() {
+        addSystemMessage("Available commands:\n/help - Show this help message\n/createInvite - Create an invite code for current channel\n/playSound <name|url> - Play a sound to everyone in the channel")
+    },
     "/createChatroom": async function(input) {
+        if (!input) {
+            addSystemMessage("Usage: /createChatroom <name>")
+            return
+        }
+        
         const resp = await fetch("/api/createChannel", {
             method: "POST",
             body: JSON.stringify({
@@ -16,13 +28,25 @@ export const wordLists = {
         })
 
         if (!resp.ok) {
+            addSystemMessage("Failed to create channel")
             return
         }
 
         const data = await resp.json()
+        if (data.status === "success") {
+            addSystemMessage(`Channel "${input}" created successfully!`)
+        } else {
+            addSystemMessage("Failed to create channel")
+        }
     },
     "/createInvite": async function() {
         let roomID = getCookie("room")
+        
+        if (roomID === "public") {
+            addSystemMessage("Cannot create invite for public channel")
+            return
+        }
+        
         const resp = await fetch("/api/createLink", {
             method: "POST",
             body: JSON.stringify({
@@ -31,18 +55,29 @@ export const wordLists = {
         })
 
         if (!resp.ok) {
+            addSystemMessage("Failed to create invite code")
             return
         }
 
         const data = await resp.json()
+        if (data.status === "success" && data.invite_link) {
+            addSystemMessage(`Invite code created: ${data.invite_link}`)
+        } else {
+            addSystemMessage("Failed to create invite code")
+        }
     },
     "/playSound": async function(input) {
-        if (!input) return
+        if (!input) {
+            addSystemMessage("Usage: /playSound <filename|url>")
+            return
+        }
         
         let soundUrl = input.trim()
+        let displayName = soundUrl
         
         if (soundUrl.startsWith('http://') || soundUrl.startsWith('https://')) {
             if (!soundUrl.endsWith('.mp3') && !soundUrl.endsWith('.ogg')) {
+                addSystemMessage("URL must be an MP3 or OGG file")
                 return
             }
         } else {
@@ -54,6 +89,7 @@ export const wordLists = {
         
         const ws = getWebSocket()
         if (!ws || ws.readyState !== WebSocket.OPEN) {
+            addSystemMessage("Not connected to server")
             return
         }
         
@@ -63,5 +99,7 @@ export const wordLists = {
             sound_url: soundUrl,
             channel_id: channelID
         }))
+        
+        addSystemMessage(`Playing sound: ${displayName}`)
     }
 }

@@ -47,5 +47,19 @@ func main() {
 
 	router.Static("/assets", "./assets")
 
+	certFile := "./ssl/cert.pem"
+	keyFile := "./ssl/key.pem"
+
+	if _, err := os.Stat(certFile); err == nil {
+		if _, err := os.Stat(keyFile); err == nil {
+			log.Println("SSL certificates found, starting HTTPS server on port 443")
+			if err := router.RunTLS(":443", certFile, keyFile); err != nil {
+				log.Fatal("Failed to start HTTPS server:", err)
+			}
+			return
+		}
+	}
+
+	log.Println("SSL certificates not found, starting HTTP server on port 8080")
 	router.Run(":8080")
 }

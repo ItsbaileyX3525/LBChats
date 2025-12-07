@@ -3,15 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Signup</title>
+  <link rel="stylesheet" href="/assets/css/login.css">
+  <link rel="stylesheet" href="/assets/css/notify.css">
+  <title>Sign Up - LBChats</title>
 </head>
 <body>
-  <form id="signup-form">
-    <input type="text" name="username" id="username" placeholder="username">
-    <input type="password" name="password" id="password" placeholder="femboylover123">
-    <input type="text" name="email" id="email" placeholder="janedoe@example.com">
-    <button>SUBMIT</button>
-  </form>
+<div class="form-container">
+	<p class="title">Create Account</p>
+  <p id="notify" class="disabled">Hi</p>
+	<form class="form" id="signup-form" action="#">
+		<div class="input-group">
+			<label for="username">Username</label>
+			<input type="text" name="username" id="username" placeholder="">
+		</div>
+		<div class="input-group">
+			<label for="email">Email</label>
+			<input type="email" name="email" id="email" placeholder="">
+		</div>
+		<div class="input-group">
+			<label for="password">Password</label>
+			<input type="password" name="password" id="password" placeholder="">
+		</div>
+		<div class="input-group">
+			<label for="confirm-password">Confirm Password</label>
+			<input type="password" name="confirm-password" id="confirm-password" placeholder="">
+		</div>
+		<button class="sign">Sign up</button>
+	</form>
+	<p class="signup">Already have an account?
+		<a rel="noopener noreferrer" href="/login" class="">Sign in</a>
+	</p>
+</div>
+<script src="/assets/js/signup.js" type="module"></script>
 </body>
-<script src="/assets/js/signup.js"></script>
 </html>

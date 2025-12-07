@@ -273,6 +273,12 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
+			db.Exec(
+				"INSERT INTO user_channels (user_id, channel_id) VALUES (?, ?)",
+				userID,
+				"public",
+			)
+
 			var sessionID string
 			sessionID, check = createSession(db, userID, username, email)
 			if check != nil {
@@ -298,35 +304,27 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 	protectedApi.Use(sessionMiddleware(db))
 	{
 		protectedApi.POST("userChannels", func(c *gin.Context) {
-			type channelsStruct struct {
-				channelID uint
+			type ChannelResult struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
 			}
 
-			var channels []channelsStruct
-
-			var dbErr error
-			var db *gorm.DB
-			db, dbErr = connectDB()
-			if dbErr != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
-				log.Print(dbErr.Error())
-				return
-			}
-
-			var err error
+			var channels []ChannelResult
 			var userID uint = c.GetUint("userID")
 
-			err = db.Raw(
-				"SELECT * FROM user_channels WHERE user_id = ?",
-				userID,
-			).Scan(&channels).Error
+			err := db.Raw(`
+				SELECT c.id, c.name 
+				FROM channels c
+				INNER JOIN user_channels uc ON c.id = uc.channel_id
+				WHERE uc.user_id = ?
+			`, userID).Scan(&channels).Error
 
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Error finding data on this user."})
+				c.JSON(200, gin.H{"status": "error", "message": "Error finding user channels"})
 				return
 			}
 
-			log.Print(channels)
+			c.JSON(200, gin.H{"status": "success", "channels": channels})
 		})
 
 		protectedApi.POST("getMessages", func(c *gin.Context) {
@@ -366,7 +364,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			err = db.Raw(
-				"SELECT username, user_id, content, created_at FROM messages WHERE channel_id = ? LIMIT 16 OFFSET ?",
+				"SELECT username, user_id, content, created_at FROM messages WHERE channel_id = ? ORDER BY created_at DESC LIMIT 16 OFFSET ?",
 				channelID,
 				offset,
 			).Scan(&messages).Error
@@ -376,11 +374,15 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			if len(messages) == 0 {
-				c.JSON(200, gin.H{"status": "success", "messages": []Messages{}})
+				c.JSON(200, gin.H{"status": "success", "messages": []Messages{}, "has_more": false})
 				return
 			}
 
-			c.JSON(200, gin.H{"status": "success", "messages": messages})
+			var totalCount int64
+			db.Raw("SELECT COUNT(*) FROM messages WHERE channel_id = ?", channelID).Scan(&totalCount)
+			hasMore := int(offset)+len(messages) < int(totalCount)
+
+			c.JSON(200, gin.H{"status": "success", "messages": messages, "has_more": hasMore})
 
 		})
 
@@ -460,15 +462,22 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			var channelUuid uuid.UUID = uuid.New()
+			var userID uint = c.GetUint("userID")
 
 			db.Exec(
 				"INSERT INTO channels (id, name, owner_id) VALUES (?, ?, ?)",
 				channelUuid,
 				channelName,
-				c.GetUint("userID"),
+				userID,
 			)
 
-			c.JSON(200, gin.H{"status": "success", "message": "Channel created successfully!"})
+			db.Exec(
+				"INSERT INTO user_channels (user_id, channel_id) VALUES (?, ?)",
+				userID,
+				channelUuid.String(),
+			)
+
+			c.JSON(200, gin.H{"status": "success", "message": "Channel created successfully!", "channel_id": channelUuid.String()})
 		})
 
 		protectedApi.POST("joinChannel", func(c *gin.Context) {

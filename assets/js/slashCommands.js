@@ -1,6 +1,10 @@
 import {
     getCookie
- } from '/assets/js/utils.js'
+} from '/assets/js/utils.js'
+
+import {
+    getWebSocket
+} from '/assets/js/ws.js'
 
 export const wordLists = {
     "/createChatroom": async function(input) {
@@ -12,17 +16,13 @@ export const wordLists = {
         })
 
         if (!resp.ok) {
-            console.log("Fetch request failed")
             return
         }
 
         const data = await resp.json()
-
-        console.log(data)
     },
     "/createInvite": async function() {
         let roomID = getCookie("room")
-        console.log(roomID)
         const resp = await fetch("/api/createLink", {
             method: "POST",
             body: JSON.stringify({
@@ -31,14 +31,37 @@ export const wordLists = {
         })
 
         if (!resp.ok) {
-            console.log("error with fetch request")
             return
         }
 
         const data = await resp.json()
-        console.log(data)
     },
     "/playSound": async function(input) {
-        console.log("playing sound to all")
+        if (!input) return
+        
+        let soundUrl = input.trim()
+        
+        if (soundUrl.startsWith('http://') || soundUrl.startsWith('https://')) {
+            if (!soundUrl.endsWith('.mp3') && !soundUrl.endsWith('.ogg')) {
+                return
+            }
+        } else {
+            soundUrl = `/assets/sounds/${soundUrl}`
+            if (!soundUrl.endsWith('.mp3') && !soundUrl.endsWith('.ogg')) {
+                soundUrl += '.mp3'
+            }
+        }
+        
+        const ws = getWebSocket()
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            return
+        }
+        
+        const channelID = getCookie("room")
+        ws.send(JSON.stringify({
+            type: 'sound',
+            sound_url: soundUrl,
+            channel_id: channelID
+        }))
     }
 }

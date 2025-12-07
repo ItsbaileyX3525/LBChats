@@ -1,4 +1,7 @@
 import {
+    getWebSocket
+} from '/assets/js/ws.js'
+import {
     wordLists
 } from '/assets/js/slashCommands.js'
 
@@ -11,34 +14,26 @@ const chatInput = document.getElementById("chatinput")
 let validSlashCommands = []
 
 async function submitMessage(message) {
-    const wordSplit = message.split(" ")
-    if (validSlashCommands.includes(wordSplit[0])) {
-        wordLists[wordSplit[0]](wordSplit[1])
+    if (message.startsWith('/')) {
+        const wordSplit = message.split(" ")
+        if (validSlashCommands.includes(wordSplit[0])) {
+            wordLists[wordSplit[0]](wordSplit[1])
+        }
         return
     }
+    
     const channelID = getCookie("room")
-    console.log(message)
-    console.log(channelID)
-    const resp = await fetch("/api/uploadMessage", {
-        method: "POST",
-        body: JSON.stringify({
-            "message": message,
-            "channel_id" : channelID,
-        })
-    })
-
-    if (!resp.ok) {
-        console.log("Error with fetch request")
+    
+    const ws = getWebSocket()
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
         return
     }
-
-    const data = await resp.json()
-
-    if (data.status == "success") {
-        console.log(data.message)
-    } else {
-        console.log(data.message)
-    }
+    
+    ws.send(JSON.stringify({
+        type: 'message',
+        content: message,
+        channel_id: channelID
+    }))
 }
 
 form.addEventListener("submit", async (e) => {
@@ -51,6 +46,4 @@ form.addEventListener("submit", async (e) => {
 
 document.addEventListener("DOMContentLoaded", () => {
     validSlashCommands = Object.keys(wordLists)
-    //console.log(validSlashCommands)
-    return
 })

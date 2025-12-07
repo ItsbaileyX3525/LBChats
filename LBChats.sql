@@ -106,6 +106,22 @@ COMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
 
+-- Table structure for table `invite_codes`
+--
+
+CREATE TABLE `invite_codes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `channel_id` varchar(255) NOT NULL,
+  `invite_code` varchar(255) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `invite_code` (`invite_code`),
+  KEY `channel_id` (`channel_id`),
+  CONSTRAINT `invite_channel` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
 -- Default data needed for the server to function
 -- 1 is the admin of the server, (the person who has
 -- Created the account first)

@@ -1,3 +1,7 @@
+import {
+    showNotif
+} from '/assets/js/notify.js'
+
 const form = document.getElementById("login-form")
 
 form.addEventListener("submit", async (e) => {
@@ -15,11 +19,18 @@ form.addEventListener("submit", async (e) => {
     })
 
     if (!resp.ok) {
-        console.log("Error with fetch request")
+        showNotif("Error with fetch request", "error")
         return
     }
 
     const data = await resp.json()
 
-    console.log(data)
+    if (data.status) {
+        showNotif(data.message, data.status)
+    }
+    if (data.status == "success") {
+        setTimeout(() => {
+            window.location.href = "/"
+        }, 4000);
+    }
 })

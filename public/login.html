@@ -3,14 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <link rel="stylesheet" href="/assets/css/login.css">
+  <link rel="stylesheet" href="/assets/css/notify.css">
+  <title>Document</title>
 </head>
 <body>
-  <form id="login-form">
-    <input type="text" placeholder="JohnDoe67" name="username" id="username">
-    <input type="password" placeholder="TsAGoodPass123!" name="password" id="password">
-    <button>SUBMIT</button>
-  </form>
+<!-- From Uiverse.io by Yaya12085 --> 
+<div class="form-container">
+	<p class="title">Login</p>
+  <p id="notify" class="disabled">Hi</p>
+	<form class="form" id="login-form">
+		<div class="input-group">
+			<label for="username">Username</label>
+			<input type="text" name="username" id="username" placeholder="">
+		</div>
+		<div class="input-group">
+			<label for="password">Password</label>
+			<input type="password" name="password" id="password" placeholder="">
+			<div class="forgot">
+				<a rel="noopener noreferrer" href="#">Forgot Password ?</a>
+			</div>
+		</div>
+		<button class="sign">Sign in</button>
+	</form>
+	<p class="signup">Don't have an account?
+		<a rel="noopener noreferrer" href="/signup" class="">Sign up</a>
+	</p>
+</div>
 </body>
-<script src="/assets/js/login.js"></script>
+<script src="/assets/js/login.js" type="module"></script>
 </html>

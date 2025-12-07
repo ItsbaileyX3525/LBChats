@@ -48,6 +48,22 @@ type Session struct {
 	User      User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
+type UserChannel struct {
+	UserID    uint      `gorm:"primaryKey;not null" json:"user_id"`
+	ChannelID string    `gorm:"primaryKey;size:255;not null" json:"channel_id"`
+	JoinedAt  time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"joined_at"`
+	User      User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Channel   Channel   `gorm:"foreignKey:ChannelID" json:"channel,omitempty"`
+}
+
+type InviteCode struct {
+	ID         uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	ChannelID  string    `gorm:"size:255;not null" json:"channel_id"`
+	InviteCode string    `gorm:"size:255;not null;uniqueIndex" json:"invite_code"`
+	CreatedAt  time.Time `gorm:"autoCreateTime" json:"created_at"`
+	Channel    Channel   `gorm:"foreignKey:ChannelID" json:"channel,omitempty"`
+}
+
 const base62Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 func serveHTML(router *gin.Engine) {

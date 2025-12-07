@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"html"
 	"log"
 	"net/http"
 	"sync"
@@ -17,15 +19,21 @@ var upgrader = websocket.Upgrader{
 }
 
 type Client struct {
-	conn     *websocket.Conn
-	userID   uint
-	username string
-	send     chan []byte
+	conn      *websocket.Conn
+	userID    uint
+	username  string
+	channelID string
+	send      chan []byte
+}
+
+type BroadcastMessage struct {
+	channelID string
+	data      []byte
 }
 
 type Hub struct {
 	clients    map[*Client]bool
-	broadcast  chan []byte
+	broadcast  chan BroadcastMessage
 	register   chan *Client
 	unregister chan *Client
 	mu         sync.RWMutex
@@ -34,7 +42,7 @@ type Hub struct {
 func newHub() *Hub {
 	return &Hub{
 		clients:    make(map[*Client]bool),
-		broadcast:  make(chan []byte),
+		broadcast:  make(chan BroadcastMessage),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
@@ -61,11 +69,13 @@ func (h *Hub) run() {
 		case message := <-h.broadcast:
 			h.mu.RLock()
 			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
+				if client.channelID == message.channelID {
+					select {
+					case client.send <- message.data:
+					default:
+						close(client.send)
+						delete(h.clients, client)
+					}
 				}
 			}
 			h.mu.RUnlock()
@@ -85,6 +95,11 @@ func createWebsockets(router *gin.Engine, db *gorm.DB) {
 			return
 		}
 
+		channelID := c.Query("channel_id")
+		if channelID == "" {
+			channelID = "public"
+		}
+
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			log.Printf("WebSocket upgrade error: %v", err)
@@ -92,20 +107,21 @@ func createWebsockets(router *gin.Engine, db *gorm.DB) {
 		}
 
 		client := &Client{
-			conn:     conn,
-			userID:   session.UserID,
-			username: session.Username,
-			send:     make(chan []byte, 256),
+			conn:      conn,
+			userID:    session.UserID,
+			username:  session.Username,
+			channelID: channelID,
+			send:      make(chan []byte, 256),
 		}
 
 		hub.register <- client
 
-		go client.writePump()
-		go client.readPump()
+		go client.writePump(db)
+		go client.readPump(db)
 	})
 }
 
-func (c *Client) readPump() {
+func (c *Client) readPump(db *gorm.DB) {
 	defer func() {
 		hub.unregister <- c
 		c.conn.Close()
@@ -120,13 +136,66 @@ func (c *Client) readPump() {
 			break
 		}
 
-		// TODO: Process message (parse JSON, save to DB, broadcast)
-		log.Printf("Received from %s: %s", c.username, message)
-		hub.broadcast <- message
+		var msgData struct {
+			Type      string `json:"type"`
+			Content   string `json:"content"`
+			ChannelID string `json:"channel_id"`
+			SoundURL  string `json:"sound_url"`
+		}
+
+		if err := json.Unmarshal(message, &msgData); err != nil {
+			log.Printf("Error parsing message: %v", err)
+			continue
+		}
+
+		if msgData.ChannelID != c.channelID {
+			log.Printf("Channel mismatch: client on %s, message for %s", c.channelID, msgData.ChannelID)
+			continue
+		}
+
+		if msgData.Type == "message" && msgData.Content != "" {
+			msg := Message{
+				UserID:    c.userID,
+				Username:  c.username,
+				ChannelID: msgData.ChannelID,
+				Content:   html.EscapeString(msgData.Content),
+			}
+
+			if err := db.Create(&msg).Error; err != nil {
+				log.Printf("Error saving message: %v", err)
+				continue
+			}
+
+			broadcastData, _ := json.Marshal(map[string]interface{}{
+				"type":       "message",
+				"id":         msg.ID,
+				"user_id":    msg.UserID,
+				"username":   msg.Username,
+				"content":    msg.Content,
+				"channel_id": msg.ChannelID,
+				"created_at": msg.CreatedAt,
+			})
+
+			hub.broadcast <- BroadcastMessage{
+				channelID: msgData.ChannelID,
+				data:      broadcastData,
+			}
+		} else if msgData.Type == "sound" && msgData.SoundURL != "" {
+			broadcastData, _ := json.Marshal(map[string]interface{}{
+				"type":      "sound",
+				"sound_url": msgData.SoundURL,
+				"username":  c.username,
+			})
+
+			hub.broadcast <- BroadcastMessage{
+				channelID: msgData.ChannelID,
+				data:      broadcastData,
+			}
+		}
 	}
 }
 
-func (c *Client) writePump() {
+func (c *Client) writePump(db *gorm.DB) {
 	defer c.conn.Close()
 
 	for message := range c.send {

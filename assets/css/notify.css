@@ -1,0 +1,20 @@
+#notify {
+    text-align: center;
+    display: block;
+}
+
+.disabled {
+    display: none !important;
+}
+
+.info {
+    color: lightblue;
+}
+
+.success {
+    color: greenyellow
+}
+
+.error {
+    color: red;
+}

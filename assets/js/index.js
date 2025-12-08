@@ -411,6 +411,6 @@ chatinput.addEventListener("input", () => {
     cmdbox.innerHTML = commands.map(cmd => `<div id="cmd-item">${cmd}</div>`).join("");
     cmdbox.style.display = "block";
   } else {
-    cmbBox.style.display = "none";
+    cmdbox.style.display = "none";
   }
 });

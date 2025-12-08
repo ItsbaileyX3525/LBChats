@@ -27,6 +27,7 @@ const generateInviteBtn = document.getElementById("generateInviteBtn")
 const closeChannelActions = document.getElementById("closeChannelActions")
 const inviteCodeDisplay = document.getElementById("inviteCodeDisplay")
 const generatedInviteCode = document.getElementById("generatedInviteCode")
+const uploadBtn = document.getElementById("uploadbtn");
 
 let onPage = 0
 let hasMore = false
@@ -408,9 +409,26 @@ chatinput.addEventListener("input", () => {
   const value = chatinput.value.trim();
 
   if(value.startsWith("/")){
-    cmdbox.innerHTML = commands.map(cmd => `<div id="cmd-item">${cmd}</div>`).join("");
+    cmdbox.innerHTML = commands
+      .map(cmd => `<div class="cmd-item">${cmd}</div>`)
+      .join("");
     cmdbox.style.display = "block";
   } else {
     cmdbox.style.display = "none";
   }
+
+  const cmdItems = document.querySelectorAll(".cmd-item");
+  cmdItems.forEach(item => {
+    item.addEventListener("click", () => {
+      chatinput.value = item.innerText.split(" - ")[0] + " ";
+      cmdbox.style.display = "none";
+      chatinput.focus();
+    });
+  });
 });
+
+
+uploadBtn.addEventListener("click", () => {
+    alert("File upload feature is not implemented yet.");
+});
+

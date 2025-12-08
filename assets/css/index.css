@@ -493,3 +493,39 @@ html, body {
   margin-bottom:8px;
 }
 
+.cmd-item{
+  padding:4px 0;
+  cursor:pointer;
+}
+.cmd-item:hover{
+  color:var(--accent-color);
+}
+
+#uploadbtn {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    padding: 0;
+    border: none;
+    background: var(--accent-color);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+#uploadbtn:hover {
+    background: var(--accent-hover);
+}
+
+#uploadbtn:active {
+    transform: scale(0.95);
+}
+
+#uploadbtn svg {
+    color: #fff;
+    display: block;
+    margin: auto;
+}

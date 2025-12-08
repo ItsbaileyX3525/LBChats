@@ -214,79 +214,105 @@ async function loadUserChannels() {
     }
 }
 
-createChannelBtn.addEventListener("click", () => {
-    createChannelModal.style.display = "flex"
-    channelNameInput.value = ""
-    channelNameInput.focus()
-})
+if (createChannelBtn) {
+    createChannelBtn.addEventListener("click", () => {
+        createChannelModal.style.display = "flex"
+        channelNameInput.value = ""
+        channelNameInput.focus()
+    })
+}
 
-joinChannelBtn.addEventListener("click", () => {
-    joinChannelModal.style.display = "flex"
-    inviteCodeInput.value = ""
-    inviteCodeInput.focus()
-})
+if (joinChannelBtn) {
+    joinChannelBtn.addEventListener("click", () => {
+        joinChannelModal.style.display = "flex"
+        inviteCodeInput.value = ""
+        inviteCodeInput.focus()
+    })
+}
 
-confirmCreateChannel.addEventListener("click", () => {
-    const channelName = channelNameInput.value.trim()
-    if (channelName) {
-        createChannel(channelName)
+if (confirmCreateChannel) {
+    confirmCreateChannel.addEventListener("click", () => {
+        const channelName = channelNameInput.value.trim()
+        if (channelName) {
+            createChannel(channelName)
+            createChannelModal.style.display = "none"
+        }
+    })
+}
+
+if (cancelCreateChannel) {
+    cancelCreateChannel.addEventListener("click", () => {
         createChannelModal.style.display = "none"
-    }
-})
+    })
+}
 
-cancelCreateChannel.addEventListener("click", () => {
-    createChannelModal.style.display = "none"
-})
+if (confirmJoinChannel) {
+    confirmJoinChannel.addEventListener("click", () => {
+        const inviteCode = inviteCodeInput.value.trim()
+        if (inviteCode) {
+            joinChannel(inviteCode)
+            joinChannelModal.style.display = "none"
+        }
+    })
+}
 
-confirmJoinChannel.addEventListener("click", () => {
-    const inviteCode = inviteCodeInput.value.trim()
-    if (inviteCode) {
-        joinChannel(inviteCode)
+if (cancelJoinChannel) {
+    cancelJoinChannel.addEventListener("click", () => {
         joinChannelModal.style.display = "none"
-    }
-})
+    })
+}
 
-cancelJoinChannel.addEventListener("click", () => {
-    joinChannelModal.style.display = "none"
-})
+if (generateInviteBtn) {
+    generateInviteBtn.addEventListener("click", () => {
+        generateInviteCode(currentChannel)
+    })
+}
 
-generateInviteBtn.addEventListener("click", () => {
-    generateInviteCode(currentChannel)
-})
-
-closeChannelActions.addEventListener("click", () => {
-    channelActionsModal.style.display = "none"
-})
-
-createChannelModal.addEventListener("click", (e) => {
-    if (e.target === createChannelModal) {
-        createChannelModal.style.display = "none"
-    }
-})
-
-joinChannelModal.addEventListener("click", (e) => {
-    if (e.target === joinChannelModal) {
-        joinChannelModal.style.display = "none"
-    }
-})
-
-channelActionsModal.addEventListener("click", (e) => {
-    if (e.target === channelActionsModal) {
+if (closeChannelActions) {
+    closeChannelActions.addEventListener("click", () => {
         channelActionsModal.style.display = "none"
-    }
-})
+    })
+}
 
-channelNameInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-        confirmCreateChannel.click()
-    }
-})
+if (createChannelModal) {
+    createChannelModal.addEventListener("click", (e) => {
+        if (e.target === createChannelModal) {
+            createChannelModal.style.display = "none"
+        }
+    })
+}
 
-inviteCodeInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-        confirmJoinChannel.click()
-    }
-})
+if (joinChannelModal) {
+    joinChannelModal.addEventListener("click", (e) => {
+        if (e.target === joinChannelModal) {
+            joinChannelModal.style.display = "none"
+        }
+    })
+}
+
+if (channelActionsModal) {
+    channelActionsModal.addEventListener("click", (e) => {
+        if (e.target === channelActionsModal) {
+            channelActionsModal.style.display = "none"
+        }
+    })
+}
+
+if (channelNameInput) {
+    channelNameInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            confirmCreateChannel.click()
+        }
+    })
+}
+
+if (inviteCodeInput) {
+    inviteCodeInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            confirmJoinChannel.click()
+        }
+    })
+}
 
 async function loadMessages() {
     let roomID = getCookie("room")
@@ -375,10 +401,12 @@ async function loadMessages() {
     }
 }
 
-loadMoreButton.addEventListener("click", () => {
-    onPage++
-    loadMessages()
-})
+if (loadMoreButton) {
+    loadMoreButton.addEventListener("click", () => {
+        onPage++
+        loadMessages()
+    })
+}
 
 const publicChatroom = document.getElementById("public")
 if (publicChatroom) {
@@ -405,30 +433,34 @@ const commands = [
   "/sounds - Shows sound list"
 ];
 
-chatinput.addEventListener("input", () => {
-  const value = chatinput.value.trim();
+if (chatinput) {
+    chatinput.addEventListener("input", () => {
+      const value = chatinput.value.trim();
 
-  if(value.startsWith("/")){
-    cmdbox.innerHTML = commands
-      .map(cmd => `<div class="cmd-item">${cmd}</div>`)
-      .join("");
-    cmdbox.style.display = "block";
-  } else {
-    cmdbox.style.display = "none";
-  }
+      if(value.startsWith("/") && cmdbox){
+        cmdbox.innerHTML = commands
+          .map(cmd => `<div class="cmd-item">${cmd}</div>`)
+          .join("");
+        cmdbox.style.display = "block";
+      } else if (cmdbox) {
+        cmdbox.style.display = "none";
+      }
 
-  const cmdItems = document.querySelectorAll(".cmd-item");
-  cmdItems.forEach(item => {
-    item.addEventListener("click", () => {
-      chatinput.value = item.innerText.split(" - ")[0] + " ";
-      cmdbox.style.display = "none";
-      chatinput.focus();
+      const cmdItems = document.querySelectorAll(".cmd-item");
+      cmdItems.forEach(item => {
+        item.addEventListener("click", () => {
+          chatinput.value = item.innerText.split(" - ")[0] + " ";
+          if (cmdbox) cmdbox.style.display = "none";
+          chatinput.focus();
+        });
+      });
     });
-  });
-});
+}
 
 
-uploadBtn.addEventListener("click", () => {
-    alert("File upload feature is not implemented yet.");
-});
+if (uploadBtn) {
+    uploadBtn.addEventListener("click", () => {
+        alert("File upload feature is not implemented yet.");
+    });
+}
 

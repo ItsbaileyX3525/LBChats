@@ -4,6 +4,7 @@ let timeout
 let currentType = null
 
 function removeClass() {
+    if (!notif) return
     notif.classList.add("disabled")
     if (currentType) {
         notif.classList.remove(currentType)
@@ -13,6 +14,7 @@ function removeClass() {
 }
 
 export function showNotif(content, type = "info", duration = 7000) {
+    if (!notif) return
     if (currentlyActive) {
         clearTimeout(timeout)
         removeClass()

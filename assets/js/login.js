@@ -4,6 +4,7 @@ import {
 
 const form = document.getElementById("login-form")
 
+if (form) {
 form.addEventListener("submit", async (e) => {
     e.preventDefault()
 
@@ -33,4 +34,5 @@ form.addEventListener("submit", async (e) => {
             window.location.href = "/"
         }, 4000);
     }
-})
+});
+}

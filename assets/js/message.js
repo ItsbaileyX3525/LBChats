@@ -43,7 +43,9 @@ form.addEventListener("submit", async (e) => {
     e.preventDefault()
     const formData = new FormData(form)
     chatInput.value = ""
-    cmdbox.style.display = "none";
+    if (cmdbox) {
+        cmdbox.style.display = "none";
+    }
     submitMessage(formData.get("message"))
 
 })

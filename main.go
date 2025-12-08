@@ -28,7 +28,7 @@ func main() {
 		secretKey = "plssetakey"
 	}
 
-	//gin.SetMode(gin.ReleaseMode) //uncomment prod
+	gin.SetMode(gin.ReleaseMode) //uncomment prod
 	router := gin.Default()
 	store := cookie.NewStore([]byte(secretKey))
 	router.Use(sessions.Sessions("lesession", store))
@@ -38,6 +38,7 @@ func main() {
 	db, err = connectDB()
 	if err != nil {
 		log.Print("Database not initialised or whatever")
+		log.Print(err.Error())
 		//return
 	}
 

@@ -94,6 +94,10 @@ async function joinChatroom(roomID) {
 }
 
 function appendToChatList(roomID, roomName) {
+    if (document.getElementById(roomID)) { //Slap on a piece of tape
+        return
+    }
+    
     const h2 = document.createElement("h2")
     h2.id = roomID
     h2.innerText = roomName

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"html"
 	"log"
 	"net/http"
 	"sync"
@@ -158,7 +157,7 @@ func (c *Client) readPump(db *gorm.DB) {
 				UserID:    c.userID,
 				Username:  c.username,
 				ChannelID: msgData.ChannelID,
-				Content:   html.EscapeString(msgData.Content),
+				Content:   msgData.Content,
 			}
 
 			if err := db.Create(&msg).Error; err != nil {

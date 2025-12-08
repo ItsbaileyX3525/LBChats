@@ -39,16 +39,17 @@ async function submitMessage(message) {
 
 }
 
-form.addEventListener("submit", async (e) => {
-    e.preventDefault()
-    const formData = new FormData(form)
-    chatInput.value = ""
-    if (cmdbox) {
-        cmdbox.style.display = "none";
-    }
-    submitMessage(formData.get("message"))
-
-})
+if (form) {
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault()
+        const formData = new FormData(form)
+        if (chatInput) chatInput.value = ""
+        if (cmdbox) {
+            cmdbox.style.display = "none";
+        }
+        submitMessage(formData.get("message"))
+    })
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     validSlashCommands = Object.keys(wordLists)

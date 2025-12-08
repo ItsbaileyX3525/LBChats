@@ -28,7 +28,7 @@ func main() {
 		secretKey = "plssetakey"
 	}
 
-	gin.SetMode(gin.ReleaseMode) //uncomment prod
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	store := cookie.NewStore([]byte(secretKey))
 	router.Use(sessions.Sessions("lesession", store))
@@ -39,14 +39,14 @@ func main() {
 	if err != nil {
 		log.Print("Database not initialised or whatever")
 		log.Print(err.Error())
-		//return
 	}
 
 	serveEndpoints(router, db)
-	serveHTML(router)
-	createWebsockets(router, db)
 
 	router.Static("/assets", "./assets")
+
+	serveHTML(router)
+	createWebsockets(router, db)
 
 	certFile := "./ssl/cert.pem"
 	keyFile := "./ssl/key.pem"

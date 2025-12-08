@@ -11,7 +11,7 @@ import {
 
 const form = document.getElementById("chatbarform")
 const chatInput = document.getElementById("chatinput")
-const cmdbox = document.getElementById("cmd-box")
+const cmdbox = document.getElementById("commandsuggestions")
 let validSlashCommands = []
 
 async function submitMessage(message) {

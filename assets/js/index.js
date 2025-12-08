@@ -28,6 +28,9 @@ const closeChannelActions = document.getElementById("closeChannelActions")
 const inviteCodeDisplay = document.getElementById("inviteCodeDisplay")
 const generatedInviteCode = document.getElementById("generatedInviteCode")
 const uploadBtn = document.getElementById("uploadbtn");
+const volumeBtn = document.getElementById("volumeBtn")
+const volumeSliderContainer = document.getElementById("volumeSliderContainer")
+const volumeSlider = document.getElementById("volume-slider")
 
 let onPage = 0
 let hasMore = false
@@ -211,6 +214,34 @@ async function loadUserChannels() {
                 appendToChatList(channel.id, channel.name)
             }
         }
+    }
+}
+
+async function loadProfileUsername() {
+    try {
+        const resp = await fetch("/api/validateCookie", {
+            method: "POST"
+        })
+
+        if (resp.status === 401) {
+            window.location.href = "/login.html"
+            return
+        }
+
+        if (!resp.ok) {
+            document.getElementById("profilename").innerText = "Guest"
+            return
+        }
+
+        const data = await resp.json()
+
+        if (data.status === "success" && data.username) {
+            document.getElementById("profilename").innerText = data.username
+        } else {
+            document.getElementById("profilename").innerText = "Guest"
+        }
+    } catch (error) {
+        document.getElementById("profilename").innerText = "Guest"
     }
 }
 
@@ -418,6 +449,7 @@ if (publicChatroom) {
 document.addEventListener('DOMContentLoaded', function () {
     setCookie("room", "public", 99999)
     loadThemes()
+    loadProfileUsername()
     loadUserChannels()
     loadMessages()
     connectWebSocket()
@@ -457,10 +489,39 @@ if (chatinput) {
     });
 }
 
-
 if (uploadBtn) {
     uploadBtn.addEventListener("click", () => {
         alert("File upload feature is not implemented yet.");
     });
+}
+
+if (volumeBtn) {
+    volumeBtn.classList.remove("disabled")
+    volumeBtn.disabled = false
+    
+    volumeBtn.addEventListener("click", () => {
+        if (volumeSliderContainer.style.display === "none") {
+            volumeSliderContainer.style.display = "flex"
+        } else {
+            volumeSliderContainer.style.display = "none"
+        }
+    })
+}
+
+if (volumeSlider) {
+    const savedVolume = localStorage.getItem('lbchats-volume')
+    if (savedVolume) {
+        volumeSlider.value = savedVolume
+    }
+    
+    volumeSlider.addEventListener("input", (e) => {
+        const volume = e.target.value / 100
+        localStorage.setItem('lbchats-volume', e.target.value)
+        
+
+        document.querySelectorAll("audio").forEach(audio => {
+            audio.volume = volume
+        })
+    })
 }
 

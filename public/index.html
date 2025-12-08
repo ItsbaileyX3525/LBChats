@@ -29,12 +29,15 @@
               <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <button id="volumeBtn" class="icon-btn" title="Volume" disabled>
+          <button id="volumeBtn" class="icon-btn" title="Volume">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M5 9v6h4l5 4V5L9 9H5z" fill="currentColor"/>
               <path d="M16.5 8.5a4.5 4.5 0 010 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
             </svg>
           </button>
+          <div id="volumeSliderContainer" style="display:none;">
+            <input type="range" id="volume-slider" min="0" max="100" value="50">
+          </div>
           <button id="themeToggle" class="icon-btn" title="Toggle theme">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" fill="currentColor"/>
@@ -44,7 +47,9 @@
         
         <div id="profile">
           <img src="/assets/images/profile.png" alt="Profile Picture" id="profilepic">
-          <div id="profilename">You</div>
+          <div id="profileinfo">
+            <div id="profilename">Loading...</div>
+          </div>
         </div>
       </div>
     </div>
@@ -56,12 +61,12 @@
       </div>
       
       <div id="chatbarcontainer">
-        <div id="commandsuggestions" style="display:none;" id="cmd-box"></div>
+        <div id="commandsuggestions" style="display:none;"></div>
         <form id="chatbarform">
           <input name="message" id="chatinput" type="text" placeholder="Type a message..." autocomplete="off">
           <button id="uploadbtn" type="button" aria-label="Upload File">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 16V4M12 4L8 8M12 4L16 8M4 20H20C21.1046 20 22 19.1046 22 18V8C22 6.89543 21.1046 6 20 6H16L14 4H10L8 6H4C2.89543 6 2 6.89543 2 8V18C2 19.1046 2.89543 20 4 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
           <button id="sendbtn" type="submit" aria-label="Send">

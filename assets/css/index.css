@@ -12,6 +12,10 @@
     --overlay-bg: rgba(37,34,43,0.85);
     --placeholder-color: rgba(255,255,255,0.40);
     --sidebar-width: 200px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
 }
 
 [data-theme="light"] {
@@ -39,6 +43,10 @@ html, body {
     color: var(--text-color);
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
 }
 
 #app-container {
@@ -46,6 +54,7 @@ html, body {
     height: 100vh;
     width: 100vw;
     overflow: hidden;
+    min-height: calc(100vh - var(--safe-top) - var(--safe-bottom));
 }
 
 #sidebar {
@@ -78,6 +87,14 @@ html, body {
     padding: 12px;
     overflow-y: auto;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: 56px;
+    align-items: center;
 }
 
 #chatcontainer > .chatitle,
@@ -98,6 +115,11 @@ html, body {
     cursor: pointer;
     transition: background 0.12s ease;
     border: 1px solid transparent;
+    white-space: nowrap;
+    padding: 8px 10px;
+    margin: 0;
+    border-radius: 8px;
+    font-size: 13px;
 }
 
 #chatcontainer > .chatitle:hover,
@@ -134,6 +156,8 @@ html, body {
     cursor: pointer;
     color: var(--text-color);
     transition: all 0.12s ease;
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .icon-btn:disabled {
@@ -195,6 +219,7 @@ html, body {
     overflow-x: hidden;
     padding: 20px;
     padding-bottom: 100px;
+    padding-bottom: calc(88px + var(--safe-bottom));
 }
 
 #chatbarcontainer {
@@ -206,6 +231,10 @@ html, body {
     background: var(--sidebar-color);
     border-top: 1px solid var(--border-color);
     backdrop-filter: blur(10px);
+    bottom: calc(var(--safe-bottom));
+    padding-bottom: calc(10px + var(--safe-bottom));
+    left: calc(var(--safe-left));
+    right: calc(var(--safe-right));
 }
 
 #chatbarform {
@@ -225,6 +254,8 @@ html, body {
     font-size: 15px;
     outline: none;
     transition: border-color 0.12s ease;
+    font-size: 16px;
+    padding: 12px;
 }
 
 #chatinput::placeholder {
@@ -434,7 +465,7 @@ html, body {
 
 
   #main-content {
-    height: calc(100vh - 56px - 72px);
+    height: calc(100vh - 56px - 72px - var(--safe-top) - var(--safe-bottom));
     padding-bottom: 0;
   }
 
@@ -454,6 +485,10 @@ html, body {
     border-top: 1px solid var(--border-color);
     z-index: 1200;
     backdrop-filter: blur(6px);
+    bottom: calc(var(--safe-bottom));
+    padding-bottom: calc(10px + var(--safe-bottom));
+    left: calc(var(--safe-left));
+    right: calc(var(--safe-right));
   }
 
   #chatbarform { gap: 8px; }
@@ -476,7 +511,10 @@ html, body {
     bottom: 64px;
     z-index: 1300;
     max-height: 180px;
-    overflow-y: auto;
+    bottom: calc(64px + var(--safe-bottom));
+    left: calc(10px + var(--safe-left));
+    right: calc(10px + var(--safe-right));
+    max-height: calc(35vh);
   }
 
 
@@ -508,7 +546,13 @@ html, body {
   #title { font-size: 16px; }
   #chatinput { font-size: 15px; padding: 10px; }
   #sendbtn, #uploadbtn { width: 40px; height: 40px; }
-  #cmd-box { bottom: 58px; left: 8px; right: 8px; }
+  #cmd-box { bottom: calc(58px + var(--safe-bottom)); left: calc(8px + var(--safe-left)); right: calc(8px + var(--safe-right)); }
+}
+
+/* Minor accessibility improvements */
+:focus {
+  outline: 3px solid rgba(127, 90, 255, 0.18);
+  outline-offset: 2px;
 }
 
 .modal {

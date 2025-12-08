@@ -175,3 +175,79 @@ body {
   from { box-shadow: 0 0 10px rgba(167, 139, 250, 0.3); }
   to { box-shadow: 0 0 18px rgba(167, 139, 250, 0.7); }
 }
+
+
+@media (max-width: 600px) {
+  body {
+    padding: 16px;
+    align-items: flex-start;
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 520px;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  .title {
+    font-size: 1.15rem;
+    line-height: 1.6rem;
+  }
+
+  .form {
+    margin-top: 1rem;
+  }
+
+  .input-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .input-group input {
+    padding: 0.625rem 0.9rem;
+    font-size: 14px;
+  }
+
+  .forgot, .signup {
+    font-size: 0.75rem;
+  }
+
+  .sign {
+    padding: 0.65rem;
+    font-size: 15px;
+  }
+
+  .social-message {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .line { display: none; }
+
+  .social-icons {
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .social-icons .icon { padding: 0.5rem; }
+
+  .form-container { animation: fadeIn 0.5s ease-in-out; }
+}
+
+@media (max-width: 420px) {
+  .form-container {
+    padding: 0.85rem;
+    border-radius: 0.5rem;
+  }
+
+  .title { font-size: 1rem; }
+
+  .input-group input { padding: 0.55rem 0.8rem; font-size: 13px; }
+
+  .sign { padding: 0.6rem; font-size: 14px; }
+
+  .social-icons .icon svg { height: 1rem; width: 1rem; }
+}

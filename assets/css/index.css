@@ -387,6 +387,130 @@ html, body {
     }
 }
 
+
+@media (max-width: 600px) {
+
+  #app-container {
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+
+  #sidebar {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 8px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  #sidebar-header { padding: 8px; }
+  #title { font-size: 18px; }
+
+  #chatcontainer {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: 56px;
+    align-items: center;
+  }
+
+  #chatcontainer > .chatitle, #chatcontainer > .chat-item {
+    white-space: nowrap;
+    padding: 8px 10px;
+    margin: 0;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+
+  #main-content {
+    height: calc(100vh - 56px - 72px);
+    padding-bottom: 0;
+  }
+
+  #chatarea {
+    padding: 12px;
+    padding-bottom: 88px; 
+  }
+
+
+  #chatbarcontainer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.04), var(--sidebar-color));
+    border-top: 1px solid var(--border-color);
+    z-index: 1200;
+    backdrop-filter: blur(6px);
+  }
+
+  #chatbarform { gap: 8px; }
+
+  #chatinput {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  #sendbtn, #uploadbtn {
+    width: 44px;
+    height: 44px;
+  }
+
+
+  #cmd-box {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: 64px;
+    z-index: 1300;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+
+  #messages {
+    padding-bottom: 12px;
+  }
+
+  .message {
+    max-width: calc(100% - 24px);
+    width: auto;
+  }
+
+  .message.own {
+    align-self: flex-end;
+  }
+
+  .message.other {
+    align-self: flex-start;
+  }
+
+
+  .modal-content { max-width: 95%; min-width: unset; padding: 16px; }
+}
+
+
+@media (max-width: 420px) {
+  #sidebar { padding: 6px 8px; }
+  #chatcontainer { max-height: 48px; }
+  #title { font-size: 16px; }
+  #chatinput { font-size: 15px; padding: 10px; }
+  #sendbtn, #uploadbtn { width: 40px; height: 40px; }
+  #cmd-box { bottom: 58px; left: 8px; right: 8px; }
+}
+
 .modal {
     position: fixed;
     top: 0;

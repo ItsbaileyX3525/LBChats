@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 const chatinput = document.getElementById("chatinput");
-const cmdbox = document.getElementById("cmd-box");
+const cmdbox = document.getElementById("commandsuggestions");
 
 const commands = [
   "/createChatroom - Creates a chatroom",

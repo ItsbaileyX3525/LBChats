@@ -393,3 +393,24 @@ document.addEventListener('DOMContentLoaded', function () {
     loadMessages()
     connectWebSocket()
 });
+
+const chatinput = document.getElementById("chatinput");
+const cmdbox = document.getElementById("commandsuggestions");
+
+const commands = [
+  "/createChatroom - Creates a chatroom",
+  "/createInvite - Creates an invite for current chatroom",
+  "/playSound [SoundName] - Plays a sound",
+  "/sounds - Shows sound list"
+];
+
+chatinput.addEventListener("input", () => {
+  const value = chatinput.value.trim();
+
+  if(value.startsWith("/")){
+    cmdbox.innerHTML = commands.map(cmd => `<div id="cmd-item">${cmd}</div>`).join("");
+    cmdbox.style.display = "block";
+  } else {
+    cmbBox.style.display = "none";
+  }
+});

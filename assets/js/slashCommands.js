@@ -11,9 +11,6 @@ import {
 } from '/assets/js/systemMessage.js'
 
 export const wordLists = {
-    "/help": function() {
-        addSystemMessage("Available commands:\n/help - Show this help message\n/createInvite - Create an invite code for current channel\n/playSound <name|url> - Play a sound to everyone in the channel")
-    },
     "/createChatroom": async function(input) {
         if (!input) {
             addSystemMessage("Usage: /createChatroom <name>")
@@ -101,5 +98,8 @@ export const wordLists = {
         }))
         
         addSystemMessage(`Playing sound: ${displayName}`)
-    }
+    },
+    "/sounds": async function() {
+        addSystemMessage("Available sounds: 67, chestnut, chestnutesFull, diddyblud, dui, enrique, ez4ence, flashbang, gatito, teto")
+    },
 }

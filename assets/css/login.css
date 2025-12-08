@@ -6,39 +6,52 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #424657 0%, #6f31ac 100%);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .form-container {
-  width: 320px;
+  width: 520px;
   border-radius: 0.75rem;
-  background-color: rgba(17, 24, 39, 1);
+  background-color: rgb(32, 22, 22);
+  border: 1px solid rgba(55, 65, 81, 1);
   padding: 2rem;
   color: rgba(243, 244, 246, 1);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 0 10px rgba(167, 139, 250, 0.6),
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 1s ease-in-out, slideUp 2.5s ease-in-out, glowPulse 2s infinite alternate;
 }
 
 .title {
   text-align: center;
   font-size: 1.5rem;
   line-height: 2rem;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 1);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   font-weight: 700;
 }
 
 .form {
   margin-top: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .input-group {
   margin-top: 0.25rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .input-group label {
   display: block;
-  color: rgba(156, 163, 175, 1);
+  color: rgba(243, 244, 246, 1);
+  font-weight: 600;
+  text-transform: uppercase;
   margin-bottom: 4px;
 }
 
@@ -50,11 +63,13 @@ body {
   background-color: rgba(17, 24, 39, 1);
   padding: 0.75rem 1rem;
   color: rgba(243, 244, 246, 1);
+  font-size: 14px; 
   box-sizing: border-box;
 }
 
 .input-group input:focus {
   border-color: rgba(167, 139, 250);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
 }
 
 .forgot {
@@ -133,4 +148,30 @@ body {
   font-size: 0.75rem;
   line-height: 1rem;
   color: rgba(156, 163, 175, 1);
+}
+
+.signup {
+  margin-top: 1rem;
+}
+.signup a {
+  font-weight: 600;
+}
+.signup a:hover {
+  text-decoration: underline rgba(167, 139, 250, 1);
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); }
+  to { transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+  from { box-shadow: 0 0 10px rgba(167, 139, 250, 0.3); }
+  to { box-shadow: 0 0 18px rgba(167, 139, 250, 0.7); }
 }

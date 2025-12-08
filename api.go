@@ -52,14 +52,6 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var err error
 			cookie, err = c.Cookie("session_id")
 
-			var db *gorm.DB
-			var dbErr error
-			db, dbErr = connectDB()
-			if dbErr != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
-				return
-			}
-
 			if err != nil {
 				db.Delete(&Session{}, "id = ?", cookie)
 			}
@@ -92,14 +84,6 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var err error
 
 			username = html.EscapeString(username)
-
-			var db *gorm.DB
-			var dbErr error
-			db, dbErr = connectDB()
-			if dbErr != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
-				return
-			}
 
 			var passwordHash string
 
@@ -217,15 +201,6 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			//Check if the username already exists
-			var dbErr error
-			var db *gorm.DB
-			db, dbErr = connectDB()
-			if dbErr != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
-				log.Print(dbErr.Error())
-				return
-			}
-
 			var existingUser string
 
 			var row *sql.Row = db.Raw(
@@ -354,15 +329,6 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 			var messages []Messages
 
-			var dbErr error
-			var db *gorm.DB
-			db, dbErr = connectDB()
-			if dbErr != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
-				log.Print(dbErr.Error())
-				return
-			}
-
 			err = db.Raw(
 				"SELECT username, user_id, content, created_at FROM messages WHERE channel_id = ? ORDER BY created_at DESC LIMIT 16 OFFSET ?",
 				channelID,
@@ -402,14 +368,6 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var channelID = body.ChannelID
 			var inviteLink string = createInviteLink()
 
-			var dbErr error
-			var db *gorm.DB
-			db, dbErr = connectDB()
-			if dbErr != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
-				log.Print(dbErr.Error())
-				return
-			}
 			var roomExists string
 
 			var scanErr error = db.Raw(
@@ -451,15 +409,6 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			var channelName string = body.ChannelName
-
-			var dbErr error
-			var db *gorm.DB
-			db, dbErr = connectDB()
-			if dbErr != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Error connecting to the database"})
-				log.Print(dbErr.Error())
-				return
-			}
 
 			var channelUuid uuid.UUID = uuid.New()
 			var userID uint = c.GetUint("userID")

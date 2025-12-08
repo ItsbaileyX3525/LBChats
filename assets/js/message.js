@@ -11,6 +11,7 @@ import {
 
 const form = document.getElementById("chatbarform")
 const chatInput = document.getElementById("chatinput")
+const cmdbox = document.getElementById("cmd-box")
 let validSlashCommands = []
 
 async function submitMessage(message) {
@@ -34,12 +35,15 @@ async function submitMessage(message) {
         content: message,
         channel_id: channelID
     }))
+
+
 }
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault()
     const formData = new FormData(form)
     chatInput.value = ""
+    cmdbox.style.display = "none";
     submitMessage(formData.get("message"))
 
 })

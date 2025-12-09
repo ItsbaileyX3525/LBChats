@@ -486,6 +486,10 @@ html, body {
     min-width: 0;
   }
 
+  #chatcontainer::-webkit-scrollbar {
+    display: none;
+  }
+
   #chatcontainer > .chatitle, 
   #chatcontainer > .chat-item {
     white-space: nowrap;
@@ -953,7 +957,7 @@ html, body {
     -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1200px) {
   #chatarea {
     padding: 12px;
     padding-bottom: calc(80px + var(--safe-bottom));

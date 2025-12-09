@@ -95,6 +95,7 @@ html, body {
     overflow-y: hidden;
     max-height: 56px;
     align-items: center;
+    min-width: 0;
 }
 
 #chatcontainer > .chatitle,
@@ -482,10 +483,7 @@ html, body {
     border-bottom: 1px solid var(--border-color);
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-  }
-
-  #chatcontainer::-webkit-scrollbar {
-    display: none;
+    min-width: 0;
   }
 
   #chatcontainer > .chatitle, 
@@ -653,6 +651,7 @@ html, body {
   #chatcontainer { 
     height: 52px;
     padding: 6px 10px;
+    min-width: 0;
   }
 
   #chatcontainer > .chatitle, 

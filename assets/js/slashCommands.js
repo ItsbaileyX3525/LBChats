@@ -102,4 +102,33 @@ export const wordLists = {
     "/sounds": async function() {
         addSystemMessage("Available sounds: 67, chestnut, chestnutesFull, diddyblud, dui, enrique, ez4ence, flashbang, gatito, teto")
     },
+    "/leaveGroup": async function() {
+        let roomID = getCookie("room")
+        
+        if (roomID === "public") {
+            addSystemMessage("Cannot leave the public channel")
+            return
+        }
+        
+        const resp = await fetch("/api/leaveChannel", {
+            method: "POST",
+            body: JSON.stringify({
+                "channel_id": roomID,
+            })
+        })
+
+        if (!resp.ok) {
+            addSystemMessage("Failed to leave channel")
+            return
+        }
+
+        const data = await resp.json()
+        if (data.status === "success") {
+            addSystemMessage("Left channel successfully")
+            // Switch back to public channel
+            document.getElementById("public").click()
+        } else {
+            addSystemMessage(data.message || "Failed to leave channel")
+        }
+    },
 }

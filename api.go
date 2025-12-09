@@ -520,5 +520,39 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				"data":    message,
 			})
 		})
+
+		protectedApi.POST("leaveChannel", func(c *gin.Context) {
+			type bodyData struct {
+				ChannelID string `json:"channel_id"`
+			}
+
+			var body bodyData
+			var err error
+			if err = c.ShouldBindBodyWithJSON(&body); err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Invalid post data"})
+				return
+			}
+
+			var channelID string = body.ChannelID
+			var userID uint = c.GetUint("userID")
+
+			if channelID == "public" {
+				c.JSON(200, gin.H{"status": "error", "message": "Cannot leave public channel"})
+				return
+			}
+
+			err = db.Exec(
+				"DELETE FROM user_channels WHERE user_id = ? AND channel_id = ?",
+				userID,
+				channelID,
+			).Error
+
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Failed to leave channel"})
+				return
+			}
+
+			c.JSON(200, gin.H{"status": "success", "message": "Left channel successfully"})
+		})
 	}
 }

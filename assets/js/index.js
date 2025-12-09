@@ -462,7 +462,8 @@ const commands = [
   "/createChatroom - Creates a chatroom",
   "/createInvite - Creates an invite for current chatroom",
   "/playSound [SoundName] - Plays a sound",
-  "/sounds - Shows sound list"
+  "/sounds - Shows sound list",
+  "/leaveGroup - Leave current group chat"
 ];
 
 if (chatinput) {

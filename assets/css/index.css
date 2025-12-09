@@ -944,3 +944,30 @@ html, body {
   }
 
 }
+
+#chatarea {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px;
+    padding-bottom: calc(88px + var(--safe-bottom));
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 600px) {
+  #chatarea {
+    padding: 12px;
+    padding-bottom: calc(80px + var(--safe-bottom));
+    height: auto;
+  }
+
+  #messages {
+    padding-bottom: calc(50vh - 40px);
+  }
+}
+
+@media (max-width: 420px) {
+  #messages {
+    padding-bottom: calc(50vh - 30px);
+  }
+}

@@ -46,7 +46,12 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			c.JSON(200, gin.H{"status": "success", "message": "Valid session", "userID": session.UserID, "username": session.Username, "profilePath": session.ProfilePicture})
+			var profilePath string = session.ProfilePicture
+			if profilePath == "" {
+				profilePath = "/assets/images/profile.png"
+			}
+
+			c.JSON(200, gin.H{"status": "success", "message": "Valid session", "userID": session.UserID, "username": session.Username, "profilePath": profilePath})
 		})
 
 		api.POST("login", func(c *gin.Context) {
@@ -716,12 +721,18 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
+			var profilePicture string = c.GetString("profile_picture")
+			if profilePicture == "" {
+				profilePicture = "/assets/images/profile.png"
+			}
+
 			var message Message
 			message = Message{
-				UserID:    userID,
-				Username:  username,
-				ChannelID: body.ChannelID,
-				Content:   html.EscapeString(body.Message),
+				UserID:         userID,
+				Username:       username,
+				ChannelID:      body.ChannelID,
+				Content:        html.EscapeString(body.Message),
+				ProfilePicture: profilePicture,
 			}
 
 			if err = db.Create(&message).Error; err != nil {

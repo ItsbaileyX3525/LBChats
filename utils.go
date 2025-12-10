@@ -112,9 +112,11 @@ func createSession(db *gorm.DB, userID uint, username string, email string) (str
 	}
 	var token string = hex.EncodeToString(tokenBytes)
 
-	// Fetch user's profile picture
 	var profilePicture string
 	db.Raw("SELECT profile_picture FROM users WHERE id = ?", userID).Scan(&profilePicture)
+	if profilePicture == "" {
+		profilePicture = "/assets/images/profile.png"
+	}
 
 	session := Session{
 		ID:             token,

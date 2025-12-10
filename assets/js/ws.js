@@ -72,7 +72,7 @@ function addMessageToUI(data) {
     span2.classList.add("message-time")
     div2.classList.add("message-content")
 
-    img.src = data.profile_path
+    img.src = data.profile_path || "/assets/images/profile.png"
     img.alt = "Avatar"
     
     messageHeader.appendChild(span)

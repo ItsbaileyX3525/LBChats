@@ -3,39 +3,55 @@ import {
 } from '/assets/js/utils.js'
 
 import {
-    connectWebSocket, getWebSocket, closeWebSocket
+    connectWebSocket, closeWebSocket
 } from '/assets/js/ws.js'
 
-var createChannelBtn = document.getElementById("createChannelBtn")
-var joinChannelBtn = document.getElementById("joinChannelBtn")
-var themeToggle = document.getElementById('themeToggle')
-var chatroomArea = document.getElementById("chatcontainer")
-var messageContainer = document.getElementById("messages")
-var loadMoreButton = document.getElementById("loadmore")
+const createChannelBtn = document.getElementById("createChannelBtn")
+const joinChannelBtn = document.getElementById("joinChannelBtn")
+const themeToggle = document.getElementById('themeToggle')
+const chatroomArea = document.getElementById("chatcontainer")
+const messageContainer = document.getElementById("messages")
+const loadMoreButton = document.getElementById("loadmore")
 
-var createChannelModal = document.getElementById("createChannelModal")
-var joinChannelModal = document.getElementById("joinChannelModal")
-var channelActionsModal = document.getElementById("channelActionsModal")
+const createChannelModal = document.getElementById("createChannelModal")
+const joinChannelModal = document.getElementById("joinChannelModal")
+const channelActionsModal = document.getElementById("channelActionsModal")
 
-var channelNameInput = document.getElementById("channelNameInput")
-var inviteCodeInput = document.getElementById("inviteCodeInput")
-var confirmCreateChannel = document.getElementById("confirmCreateChannel")
-var cancelCreateChannel = document.getElementById("cancelCreateChannel")
-var confirmJoinChannel = document.getElementById("confirmJoinChannel")
-var cancelJoinChannel = document.getElementById("cancelJoinChannel")
-var generateInviteBtn = document.getElementById("generateInviteBtn")
-var closeChannelActions = document.getElementById("closeChannelActions")
-var inviteCodeDisplay = document.getElementById("inviteCodeDisplay")
-var generatedInviteCode = document.getElementById("generatedInviteCode")
-var uploadBtn = document.getElementById("uploadbtn")
-var volumeBtn = document.getElementById("volumeBtn")
-var volumeSliderContainer = document.getElementById("volumeSliderContainer")
-var volumeSlider = document.getElementById("volume-slider")
-var logoutBtn = document.getElementById("logout-btn")
+const channelNameInput = document.getElementById("channelNameInput")
+const inviteCodeInput = document.getElementById("inviteCodeInput")
+const confirmCreateChannel = document.getElementById("confirmCreateChannel")
+const cancelCreateChannel = document.getElementById("cancelCreateChannel")
+const confirmJoinChannel = document.getElementById("confirmJoinChannel")
+const cancelJoinChannel = document.getElementById("cancelJoinChannel")
+const generateInviteBtn = document.getElementById("generateInviteBtn")
+const closeChannelActions = document.getElementById("closeChannelActions")
+const inviteCodeDisplay = document.getElementById("inviteCodeDisplay")
+const generatedInviteCode = document.getElementById("generatedInviteCode")
+const uploadBtn = document.getElementById("uploadbtn")
+const volumeBtn = document.getElementById("volumeBtn")
+const volumeSliderContainer = document.getElementById("volumeSliderContainer")
+const volumeSlider = document.getElementById("volume-slider")
+const logoutBtn = document.getElementById("logout-btn")
+const settingsBtn = document.getElementById("settingsButton")
+const chatinput = document.getElementById("chatinput")
+const cmdbox = document.getElementById("commandsuggestions")
+const publicChatroom = document.getElementById("public")
+const channelActionsTitle = document.getElementById("channelActionsTitle")
+const profilename = document.getElementById("profilename")
+const profilepic = document.getElementById("profilepic")
+const chatarea = document.getElementById("chatarea")
 
-var onPage = 0
-var hasMore = false
-var currentChannel = "public"
+let onPage = 0
+let hasMore = false
+let currentChannel = "public"
+
+const commands = [
+  "/createChatroom - Creates a chatroom",
+  "/createInvite - Creates an invite for current chatroom",
+  "/playSound [SoundName] - Plays a sound",
+  "/sounds - Shows sound list",
+  "/leaveGroup - Leave current group chat"
+]
 
 function loadThemes() {
   var root = document.documentElement;
@@ -134,7 +150,7 @@ function switchChannel(channelID) {
 
 function showChannelActions(channelID, channelName) {
     currentChannel = channelID
-    document.getElementById("channelActionsTitle").innerText = `${channelName} Options`
+    channelActionsTitle.innerText = `${channelName} Options`
     inviteCodeDisplay.style.display = "none"
     channelActionsModal.style.display = "flex"
 }
@@ -230,20 +246,20 @@ async function loadProfileUsername() {
         }
 
         if (!resp.ok) {
-            document.getElementById("profilename").innerText = "Guest"
+            profilename.innerText = "Guest"
             return
         }
 
         var data = await resp.json()
 
-        if (data.status === "success" && data.username && data.profilePath) {
-            document.getElementById("profilename").innerText = data.username
-            document.getElementById("profilepic").src = data.profilePath
+        if (data.status === "success" && data.username) {
+            profilename.innerText = data.username
+            profilepic.src = data.profilePath || "/assets/images/profile.png"
         } else {
-            document.getElementById("profilename").innerText = "Guest"
+            profilename.innerText = "Guest"
         }
     } catch (error) {
-        document.getElementById("profilename").innerText = "Guest"
+        profilename.innerText = "Guest"
     }
 }
 
@@ -417,7 +433,6 @@ async function loadMessages() {
             div2.innerText = e.Content
         }
         
-        var chatarea = document.getElementById("chatarea")
         if (chatarea) {
             chatarea.scrollTop = chatarea.scrollHeight
         }
@@ -475,7 +490,6 @@ if (loadMoreButton) {
     })
 }
 
-var publicChatroom = document.getElementById("public")
 if (publicChatroom) {
     publicChatroom.addEventListener("click", () => {
         switchChannel("public")
@@ -489,18 +503,7 @@ document.addEventListener('DOMContentLoaded', function () {
     loadUserChannels()
     loadMessages()
     connectWebSocket()
-});
-
-var chatinput = document.getElementById("chatinput")
-var cmdbox = document.getElementById("commandsuggestions")
-
-var commands = [
-  "/createChatroom - Creates a chatroom",
-  "/createInvite - Creates an invite for current chatroom",
-  "/playSound [SoundName] - Plays a sound",
-  "/sounds - Shows sound list",
-  "/leaveGroup - Leave current group chat"
-];
+})
 
 if (chatinput) {
     chatinput.addEventListener("input", () => {
@@ -564,4 +567,8 @@ if (volumeSlider) {
 
 logoutBtn.addEventListener("click", () => {
     window.location.href = "/api/logout"
+})
+
+settingsBtn.addEventListener("click", () => {
+    window.location.href = "/settings"
 })

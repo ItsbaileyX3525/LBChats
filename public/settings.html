@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - LBChats</title>
+  <link rel="stylesheet" href="/assets/css/login.css">
+</head>
+<body>
+  <div class="container">
+    <div class="login-box">
+      <h1>Settings</h1>
+      
+      <div class="settings-grid">
+        <div class="settings-left">
+          <form id="profile-pic-form">
+            <h2>Profile Picture</h2>
+            <div class="profile-preview">
+              <img src="/assets/images/profile.png" alt="Profile Picture" id="preview-pic">
+            </div>
+            <div class="form-group">
+              <label for="profile-upload">Upload New Picture</label>
+              <input type="file" id="profile-upload" accept="image/*">
+            </div>
+            <button type="submit" class="btn">Update Picture</button>
+          </form>
+
+          <form id="username-form">
+            <h2>Change Username</h2>
+            <div class="form-group">
+              <label for="new-username">New Username</label>
+              <input type="text" id="new-username" name="username" placeholder="Enter new username" required>
+            </div>
+            <button type="submit" class="btn">Update Username</button>
+          </form>
+        </div>
+
+        <div class="settings-right">
+          <form id="password-form">
+            <h2>Change Password</h2>
+            <div class="form-group">
+              <label for="current-password">Current Password</label>
+              <input type="password" id="current-password" name="current_password" placeholder="Enter current password" required>
+            </div>
+            <div class="form-group">
+              <label for="new-password">New Password</label>
+              <input type="password" id="new-password" name="new_password" placeholder="Enter new password" required>
+            </div>
+            <div class="form-group">
+              <label for="confirm-password">Confirm New Password</label>
+              <input type="password" id="confirm-password" name="confirm_password" placeholder="Confirm new password" required>
+            </div>
+            <button type="submit" class="btn">Update Password</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="links">
+        <a href="/index.html">Back to Chat</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/js/settings.js" type="module"></script>
+</body>
+</html>

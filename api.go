@@ -47,28 +47,6 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			c.JSON(200, gin.H{"status": "success", "message": "Valid session", "userID": session.UserID, "username": session.Username})
 		})
 
-		api.POST("logout", func(c *gin.Context) {
-			var cookie string
-			var err error
-			cookie, err = c.Cookie("session_id")
-
-			if err != nil {
-				db.Delete(&Session{}, "id = ?", cookie)
-			}
-
-			c.SetCookie(
-				"session_id",
-				"",
-				-1,
-				"/",
-				"",
-				false,
-				true,
-			)
-
-			c.JSON(200, gin.H{"status": "success", "message": "logged out successfully."})
-		})
-
 		api.POST("login", func(c *gin.Context) {
 			type bodyData struct {
 				Username string `json:"username"`
@@ -278,6 +256,81 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 	var protectedApi = router.Group("api")
 	protectedApi.Use(sessionMiddleware(db))
 	{
+		protectedApi.GET("logout", func(c *gin.Context) {
+			var cookie string
+			var err error
+			cookie, err = c.Cookie("session_id")
+
+			if err != nil {
+				db.Delete(&Session{}, "id = ?", cookie)
+			}
+
+			c.SetCookie(
+				"session_id",
+				"",
+				-1,
+				"/",
+				"",
+				false,
+				true,
+			)
+
+			c.Redirect(302, "/login")
+		})
+
+		protectedApi.POST("changeUsername", func(c *gin.Context) {
+			type bodyData struct {
+				Username string `json:"username"`
+			}
+
+			type usernameCheck struct {
+				Username string `gorm:"column:username"`
+			}
+
+			var body bodyData
+			var err error
+			err = c.ShouldBindBodyWithJSON(&body)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "invalid form data"})
+				return
+			}
+
+			var currUsername string = c.GetString("username")
+			var username string = html.EscapeString(body.Username)
+			var usedUsername usernameCheck
+
+			err = db.Raw(
+				"SELECT username FROM users WHERE username = ?",
+				username,
+			).Scan(&usedUsername).Error
+			if err != nil && err != sql.ErrNoRows {
+				c.JSON(200, gin.H{"status": "error", "message": "database error"})
+				return
+			}
+
+			err = db.Exec(
+				"UPDATE users SET username = ? WHERE username = ?",
+				username,
+				currUsername,
+			).Error
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "database error"})
+				return
+			}
+
+			err = db.Exec(
+				"UPDATE sessions SET username = ? WHERE username = ?",
+				username,
+				currUsername,
+			).Error
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "failed to update session"})
+				return
+			}
+
+			c.JSON(200, gin.H{"status": "success", "message": "username changed successfully"})
+		})
+
 		protectedApi.POST("userChannels", func(c *gin.Context) {
 			type ChannelResult struct {
 				ID   string `json:"id"`

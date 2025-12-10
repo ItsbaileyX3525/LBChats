@@ -32,7 +32,7 @@ form.addEventListener("submit", async (e) => {
     if (data.status == "success") {
         setTimeout(() => {
             window.location.href = "/"
-        }, 4000);
+        }, 1000);
     }
 });
 }

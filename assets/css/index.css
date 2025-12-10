@@ -214,6 +214,26 @@ html, body {
     white-space: nowrap;
 }
 
+#logout-btn {
+    text-align: center;
+    padding: 8px 12px;
+    margin-top: 8px;
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.12s ease;
+}
+
+#logout-btn:hover {
+    background: var(--hover-color);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
 #main-content {
     flex: 1;
     display: flex;

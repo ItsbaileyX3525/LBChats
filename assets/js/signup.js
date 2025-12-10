@@ -44,7 +44,7 @@ form.addEventListener("submit", async (e) => {
         showNotif(data.message, data.status)
         setTimeout(() => {
             window.location.href = "/"
-        }, 4000);
+        }, 1000);
     } else {
         signedUp = false
         showNotif(data.message, data.status)

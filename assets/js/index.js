@@ -31,6 +31,7 @@ const uploadBtn = document.getElementById("uploadbtn");
 const volumeBtn = document.getElementById("volumeBtn")
 const volumeSliderContainer = document.getElementById("volumeSliderContainer")
 const volumeSlider = document.getElementById("volume-slider")
+const logoutBtn = document.getElementById("logout-btn")
 
 let onPage = 0
 let hasMore = false
@@ -526,3 +527,6 @@ if (volumeSlider) {
     })
 }
 
+logoutBtn.addEventListener("click", () => {
+    window.location.href = "/api/logout"
+})

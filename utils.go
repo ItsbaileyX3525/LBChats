@@ -14,10 +14,11 @@ import (
 )
 
 type User struct {
-	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	Username string `gorm:"size:255;not null" json:"username"`
-	Password string `gorm:"size:255;not null" json:"-"`
-	Email    string `gorm:"size:255;not null" json:"email"`
+	ID             uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	Username       string `gorm:"size:255;not null" json:"username"`
+	Password       string `gorm:"size:255;not null" json:"-"`
+	Email          string `gorm:"size:255;not null" json:"email"`
+	ProfilePicture string `gorm:"size:255" json:"profile_picture"`
 }
 
 type Channel struct {
@@ -29,23 +30,25 @@ type Channel struct {
 }
 
 type Message struct {
-	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserID    uint      `gorm:"not null" json:"user_id"`
-	Username  string    `gorm:"not null" json:"username"`
-	ChannelID string    `gorm:"not null" json:"channel_id"`
-	Content   string    `gorm:"size:1000;not null" json:"content"`
-	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
-	User      User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	Channel   Channel   `gorm:"foreignKey:ChannelID" json:"channel,omitempty"`
+	ID             uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	UserID         uint      `gorm:"not null" json:"user_id"`
+	Username       string    `gorm:"not null" json:"username"`
+	ChannelID      string    `gorm:"not null" json:"channel_id"`
+	Content        string    `gorm:"size:1000;not null" json:"content"`
+	ProfilePicture string    `gorm:"size:255" json:"profile_picture"`
+	CreatedAt      time.Time `gorm:"autoCreateTime" json:"created_at"`
+	User           User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Channel        Channel   `gorm:"foreignKey:ChannelID" json:"channel,omitempty"`
 }
 
 type Session struct {
-	ID        string    `gorm:"primaryKey;size:64" json:"id"`
-	UserID    uint      `gorm:"column:user_id;not null" json:"user_id"`
-	Email     string    `gorm:"size:255;not null" json:"email"`
-	Username  string    `gorm:"size:255;not null" json:"username"`
-	ExpiresAt time.Time `gorm:"column:expires_at;not null" json:"expires_at"`
-	User      User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	ID             string    `gorm:"primaryKey;size:64" json:"id"`
+	UserID         uint      `gorm:"column:user_id;not null" json:"user_id"`
+	Email          string    `gorm:"size:255;not null" json:"email"`
+	Username       string    `gorm:"size:255;not null" json:"username"`
+	ProfilePicture string    `gorm:"size:255" json:"profile_picture"`
+	ExpiresAt      time.Time `gorm:"column:expires_at;not null" json:"expires_at"`
+	User           User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 type UserChannel struct {
@@ -109,12 +112,17 @@ func createSession(db *gorm.DB, userID uint, username string, email string) (str
 	}
 	var token string = hex.EncodeToString(tokenBytes)
 
+	// Fetch user's profile picture
+	var profilePicture string
+	db.Raw("SELECT profile_picture FROM users WHERE id = ?", userID).Scan(&profilePicture)
+
 	session := Session{
-		ID:        token,
-		UserID:    userID,
-		Username:  username,
-		Email:     email,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
+		ID:             token,
+		UserID:         userID,
+		Username:       username,
+		Email:          email,
+		ProfilePicture: profilePicture,
+		ExpiresAt:      time.Now().Add(24 * time.Hour),
 	}
 
 	if err = db.Create(&session).Error; err != nil {
@@ -156,6 +164,7 @@ func sessionMiddleware(db *gorm.DB) gin.HandlerFunc {
 		c.Set("userID", session.UserID)
 		c.Set("email", session.Email)
 		c.Set("username", session.Username)
+		c.Set("profile_picture", session.ProfilePicture)
 
 		c.Next()
 	}

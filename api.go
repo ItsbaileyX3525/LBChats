@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"os"
 	"regexp"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/wabarc/go-catbox"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -44,7 +46,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			c.JSON(200, gin.H{"status": "success", "message": "Valid session", "userID": session.UserID, "username": session.Username})
+			c.JSON(200, gin.H{"status": "success", "message": "Valid session", "userID": session.UserID, "username": session.Username, "profilePath": session.ProfilePicture})
 		})
 
 		api.POST("login", func(c *gin.Context) {
@@ -292,6 +294,66 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			c.Redirect(302, "/login")
 		})
 
+		protectedApi.POST("changeProfile", func(c *gin.Context) {
+			file, err := c.FormFile("profile_picture")
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "No file uploaded"})
+				return
+			}
+
+			if file.Size > 5*1024*1024 {
+				c.JSON(200, gin.H{"status": "error", "message": "File size exceeds 5MB limit"})
+				return
+			}
+
+			contentType := file.Header.Get("Content-Type")
+			if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/gif" && contentType != "image/webp" {
+				c.JSON(200, gin.H{"status": "error", "message": "Only image files (JPEG, PNG, GIF, WEBP) are allowed"})
+				return
+			}
+
+			src, err := file.Open()
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Failed to open uploaded file"})
+				return
+			}
+			defer src.Close()
+
+			tempFile, err := os.CreateTemp("", "profile-*.jpg")
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Failed to create temp file"})
+				return
+			}
+			tempPath := tempFile.Name()
+			defer os.Remove(tempPath)
+
+			_, err = tempFile.ReadFrom(src)
+			tempFile.Close()
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Failed to save uploaded file"})
+				return
+			}
+
+			url, err := catbox.New(nil).Upload(tempPath)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Failed to upload to Catbox"})
+				return
+			}
+
+			userID := c.GetUint("userID")
+			if err := db.Exec("UPDATE users SET profile_picture = ? WHERE id = ?", url, userID).Error; err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Failed to update profile picture"})
+				return
+			}
+
+			if err := db.Exec("UPDATE sessions SET profile_picture = ? WHERE user_id = ?", url, userID).Error; err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Failed to update session"})
+				return
+			}
+
+			c.JSON(200, gin.H{"status": "success", "message": "Profile picture updated successfully", "url": url})
+		})
+
 		protectedApi.POST("changePassword", func(c *gin.Context) {
 			type bodyData struct {
 				CurrPassword string `json:"curr_password"`
@@ -461,10 +523,11 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			type Messages struct {
-				UserID    uint      `gorm:"column:user_id"`
-				Username  string    `gorm:"column:username"`
-				Content   string    `gorm:"column:content"`
-				CreatedAt time.Time `gorm:"column:created_at"`
+				UserID      uint      `gorm:"column:user_id"`
+				Username    string    `gorm:"column:username"`
+				Content     string    `gorm:"column:content"`
+				ProfilePath string    `gorm:"column:profile_picture"`
+				CreatedAt   time.Time `gorm:"column:created_at"`
 			}
 
 			var body bodyData
@@ -482,7 +545,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var messages []Messages
 
 			err = db.Raw(
-				"SELECT username, user_id, content, created_at FROM messages WHERE channel_id = ? ORDER BY created_at DESC LIMIT 16 OFFSET ?",
+				"SELECT username, user_id, content, created_at, profile_picture FROM messages WHERE channel_id = ? ORDER BY created_at DESC LIMIT 16 OFFSET ?",
 				channelID,
 				offset,
 			).Scan(&messages).Error

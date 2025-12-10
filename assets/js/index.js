@@ -6,36 +6,36 @@ import {
     connectWebSocket, getWebSocket, closeWebSocket
 } from '/assets/js/ws.js'
 
-const createChannelBtn = document.getElementById("createChannelBtn")
-const joinChannelBtn = document.getElementById("joinChannelBtn")
-const themeToggle = document.getElementById('themeToggle');
-const chatroomArea = document.getElementById("chatcontainer")
-const messageContainer = document.getElementById("messages")
-const loadMoreButton = document.getElementById("loadmore")
+var createChannelBtn = document.getElementById("createChannelBtn")
+var joinChannelBtn = document.getElementById("joinChannelBtn")
+var themeToggle = document.getElementById('themeToggle')
+var chatroomArea = document.getElementById("chatcontainer")
+var messageContainer = document.getElementById("messages")
+var loadMoreButton = document.getElementById("loadmore")
 
-const createChannelModal = document.getElementById("createChannelModal")
-const joinChannelModal = document.getElementById("joinChannelModal")
-const channelActionsModal = document.getElementById("channelActionsModal")
+var createChannelModal = document.getElementById("createChannelModal")
+var joinChannelModal = document.getElementById("joinChannelModal")
+var channelActionsModal = document.getElementById("channelActionsModal")
 
-const channelNameInput = document.getElementById("channelNameInput")
-const inviteCodeInput = document.getElementById("inviteCodeInput")
-const confirmCreateChannel = document.getElementById("confirmCreateChannel")
-const cancelCreateChannel = document.getElementById("cancelCreateChannel")
-const confirmJoinChannel = document.getElementById("confirmJoinChannel")
-const cancelJoinChannel = document.getElementById("cancelJoinChannel")
-const generateInviteBtn = document.getElementById("generateInviteBtn")
-const closeChannelActions = document.getElementById("closeChannelActions")
-const inviteCodeDisplay = document.getElementById("inviteCodeDisplay")
-const generatedInviteCode = document.getElementById("generatedInviteCode")
-const uploadBtn = document.getElementById("uploadbtn");
-const volumeBtn = document.getElementById("volumeBtn")
-const volumeSliderContainer = document.getElementById("volumeSliderContainer")
-const volumeSlider = document.getElementById("volume-slider")
-const logoutBtn = document.getElementById("logout-btn")
+var channelNameInput = document.getElementById("channelNameInput")
+var inviteCodeInput = document.getElementById("inviteCodeInput")
+var confirmCreateChannel = document.getElementById("confirmCreateChannel")
+var cancelCreateChannel = document.getElementById("cancelCreateChannel")
+var confirmJoinChannel = document.getElementById("confirmJoinChannel")
+var cancelJoinChannel = document.getElementById("cancelJoinChannel")
+var generateInviteBtn = document.getElementById("generateInviteBtn")
+var closeChannelActions = document.getElementById("closeChannelActions")
+var inviteCodeDisplay = document.getElementById("inviteCodeDisplay")
+var generatedInviteCode = document.getElementById("generatedInviteCode")
+var uploadBtn = document.getElementById("uploadbtn")
+var volumeBtn = document.getElementById("volumeBtn")
+var volumeSliderContainer = document.getElementById("volumeSliderContainer")
+var volumeSlider = document.getElementById("volume-slider")
+var logoutBtn = document.getElementById("logout-btn")
 
-let onPage = 0
-let hasMore = false
-let currentChannel = "public"
+var onPage = 0
+var hasMore = false
+var currentChannel = "public"
 
 function loadThemes() {
   var root = document.documentElement;
@@ -76,7 +76,7 @@ function loadThemes() {
 
 async function joinChatroom(roomID) {
     return new Promise( async (resolve, reject) => {
-        const resp = await fetch("/api/joinChannel", {
+        var resp = await fetch("/api/joinChannel", {
             method: "POST",
             body: JSON.stringify({
                 "invite_link" : roomID,
@@ -88,7 +88,7 @@ async function joinChatroom(roomID) {
             return
         }
 
-        const data = await resp.json()
+        var data = await resp.json()
 
         if (data.status == "true") {
             resolve("Joined channel successfully!")
@@ -99,11 +99,11 @@ async function joinChatroom(roomID) {
 }
 
 function appendToChatList(roomID, roomName) {
-    if (document.getElementById(roomID)) { //Slap on a piece of tape
+    if (document.getElementById(roomID)) {
         return
     }
     
-    const h2 = document.createElement("h2")
+    var h2 = document.createElement("h2")
     h2.id = roomID
     h2.innerText = roomName
     chatroomArea.appendChild(h2)
@@ -140,7 +140,7 @@ function showChannelActions(channelID, channelName) {
 }
 
 async function createChannel(channelName) {
-    const resp = await fetch("/api/createChannel", {
+    var resp = await fetch("/api/createChannel", {
         method: "POST",
         body: JSON.stringify({
             "channel_name": channelName
@@ -151,7 +151,7 @@ async function createChannel(channelName) {
         return
     }
 
-    const data = await resp.json()
+    var data = await resp.json()
     
     if (data.status === "success" && data.channel_id) {
         appendToChatList(data.channel_id, channelName)
@@ -160,7 +160,7 @@ async function createChannel(channelName) {
 }
 
 async function joinChannel(inviteCode) {
-    const resp = await fetch("/api/joinChannel", {
+    var resp = await fetch("/api/joinChannel", {
         method: "POST",
         body: JSON.stringify({
             "invite_link": inviteCode
@@ -171,7 +171,7 @@ async function joinChannel(inviteCode) {
         return
     }
 
-    const data = await resp.json()
+    var data = await resp.json()
     
     if (data.status === "success") {
         loadUserChannels()
@@ -179,7 +179,7 @@ async function joinChannel(inviteCode) {
 }
 
 async function generateInviteCode(channelID) {
-    const resp = await fetch("/api/createLink", {
+    var resp = await fetch("/api/createLink", {
         method: "POST",
         body: JSON.stringify({
             "channel_id": channelID
@@ -190,7 +190,7 @@ async function generateInviteCode(channelID) {
         return
     }
 
-    const data = await resp.json()
+    var data = await resp.json()
     
     if (data.status === "success" && data.invite_link) {
         generatedInviteCode.innerText = data.invite_link
@@ -199,7 +199,7 @@ async function generateInviteCode(channelID) {
 }
 
 async function loadUserChannels() {
-    const resp = await fetch("/api/userChannels", {
+    var resp = await fetch("/api/userChannels", {
         method: "POST"
     })
 
@@ -207,12 +207,12 @@ async function loadUserChannels() {
         return
     }
 
-    const data = await resp.json()
+    var data = await resp.json()
     
     if (data.status === "success" && data.channels) {
-        for (let channel of data.channels) {
-            if (channel.id !== "public") {
-                appendToChatList(channel.id, channel.name)
+        for (var i = 0; i < data.channels.length; i++) {
+            if (data.channels[i].id !== "public") {
+                appendToChatList(data.channels[i].id, data.channels[i].name)
             }
         }
     }
@@ -220,7 +220,7 @@ async function loadUserChannels() {
 
 async function loadProfileUsername() {
     try {
-        const resp = await fetch("/api/validateCookie", {
+        var resp = await fetch("/api/validateCookie", {
             method: "POST"
         })
 
@@ -234,10 +234,11 @@ async function loadProfileUsername() {
             return
         }
 
-        const data = await resp.json()
+        var data = await resp.json()
 
-        if (data.status === "success" && data.username) {
+        if (data.status === "success" && data.username && data.profilePath) {
             document.getElementById("profilename").innerText = data.username
+            document.getElementById("profilepic").src = data.profilePath
         } else {
             document.getElementById("profilename").innerText = "Guest"
         }
@@ -264,7 +265,7 @@ if (joinChannelBtn) {
 
 if (confirmCreateChannel) {
     confirmCreateChannel.addEventListener("click", () => {
-        const channelName = channelNameInput.value.trim()
+        var channelName = channelNameInput.value.trim()
         if (channelName) {
             createChannel(channelName)
             createChannelModal.style.display = "none"
@@ -280,7 +281,7 @@ if (cancelCreateChannel) {
 
 if (confirmJoinChannel) {
     confirmJoinChannel.addEventListener("click", () => {
-        const inviteCode = inviteCodeInput.value.trim()
+        var inviteCode = inviteCodeInput.value.trim()
         if (inviteCode) {
             joinChannel(inviteCode)
             joinChannelModal.style.display = "none"
@@ -347,8 +348,8 @@ if (inviteCodeInput) {
 }
 
 async function loadMessages() {
-    let roomID = getCookie("room")
-    const resp = await fetch("/api/getMessages", {
+    var roomID = getCookie("room")
+    var resp = await fetch("/api/getMessages", {
         method: "POST",
         body: JSON.stringify({
             "channel_id": roomID,
@@ -361,7 +362,7 @@ async function loadMessages() {
         return
     }
 
-    const data = await resp.json()
+    var data = await resp.json()
 
     if (!data.messages) {
         return
@@ -376,49 +377,83 @@ async function loadMessages() {
     }
     
     if (onPage === 0) {
-        for (let i = data.messages.length - 1; i >= 0; i--) {
-            const e = data.messages[i]
-            const div = document.createElement("div")
-            const div2 = document.createElement("div")
-            const span = document.createElement("span")
-            const span2 = document.createElement("span")
+        for (var i = data.messages.length - 1; i >= 0; i--) {
+            var e = data.messages[i]
+            var div = document.createElement("div")
+            var img = document.createElement("img")
+            var messageBody = document.createElement("div")
+            var messageHeader = document.createElement("div")
+            var span = document.createElement("span")
+            var span2 = document.createElement("span")
+            var div2 = document.createElement("div")
             
             div.classList.add("message", "other")
+            img.classList.add("message-avatar")
+            messageBody.classList.add("message-body")
+            messageHeader.classList.add("message-header")
             span.classList.add("message-username")
             span2.classList.add("message-time")
             div2.classList.add("message-content")
+
+            console.log(e)
+
+            if (!e.ProfilePath) {
+                img.src = "/assets/images/profile.png"
+            } else {
+                img.src = e.ProfilePath
+            }
+            img.alt = "Avatar"
             
-            div.appendChild(span)
-            div.appendChild(span2)
-            div.appendChild(div2)
+            messageHeader.appendChild(span)
+            messageHeader.appendChild(span2)
+            messageBody.appendChild(messageHeader)
+            messageBody.appendChild(div2)
+            div.appendChild(img)
+            div.appendChild(messageBody)
+            messageContainer.appendChild(div)
             
             span.innerText = e.Username
             span2.innerText = new Date(e.created_at || e.CreatedAt).toLocaleString()
             div2.innerText = e.Content
-            
-            messageContainer.appendChild(div)
         }
         
-        const chatarea = document.getElementById("chatarea")
+        var chatarea = document.getElementById("chatarea")
         if (chatarea) {
             chatarea.scrollTop = chatarea.scrollHeight
         }
     } else {
-        for (let i = 0; i < data.messages.length; i++) {
-            const e = data.messages[i]
-            const div = document.createElement("div")
-            const div2 = document.createElement("div")
-            const span = document.createElement("span")
-            const span2 = document.createElement("span")
+        for (var i = 0; i < data.messages.length; i++) {
+            var e = data.messages[i]
+            var div = document.createElement("div")
+            var img = document.createElement("img")
+            var messageBody = document.createElement("div")
+            var messageHeader = document.createElement("div")
+            var span = document.createElement("span")
+            var span2 = document.createElement("span")
+            var div2 = document.createElement("div")
             
             div.classList.add("message", "other")
+            img.classList.add("message-avatar")
+            messageBody.classList.add("message-body")
+            messageHeader.classList.add("message-header")
             span.classList.add("message-username")
             span2.classList.add("message-time")
             div2.classList.add("message-content")
             
-            div.appendChild(span)
-            div.appendChild(span2)
-            div.appendChild(div2)
+            if (!e.ProfilePath) {
+                img.src = "/assets/images/profile.png"
+            } else {
+                img.src = e.ProfilePath
+            }
+            
+            img.alt = "Avatar"
+            
+            messageHeader.appendChild(span)
+            messageHeader.appendChild(span2)
+            messageBody.appendChild(messageHeader)
+            messageBody.appendChild(div2)
+            div.appendChild(img)
+            div.appendChild(messageBody)
             
             span.innerText = e.Username
             span2.innerText = new Date(e.created_at || e.CreatedAt).toLocaleString()
@@ -440,7 +475,7 @@ if (loadMoreButton) {
     })
 }
 
-const publicChatroom = document.getElementById("public")
+var publicChatroom = document.getElementById("public")
 if (publicChatroom) {
     publicChatroom.addEventListener("click", () => {
         switchChannel("public")
@@ -456,10 +491,10 @@ document.addEventListener('DOMContentLoaded', function () {
     connectWebSocket()
 });
 
-const chatinput = document.getElementById("chatinput");
-const cmdbox = document.getElementById("commandsuggestions");
+var chatinput = document.getElementById("chatinput")
+var cmdbox = document.getElementById("commandsuggestions")
 
-const commands = [
+var commands = [
   "/createChatroom - Creates a chatroom",
   "/createInvite - Creates an invite for current chatroom",
   "/playSound [SoundName] - Plays a sound",
@@ -469,26 +504,26 @@ const commands = [
 
 if (chatinput) {
     chatinput.addEventListener("input", () => {
-      const value = chatinput.value.trim();
+      var value = chatinput.value.trim()
 
       if(value.startsWith("/") && cmdbox){
         cmdbox.innerHTML = commands
           .map(cmd => `<div class="cmd-item">${cmd}</div>`)
-          .join("");
-        cmdbox.style.display = "block";
+          .join("")
+        cmdbox.style.display = "block"
       } else if (cmdbox) {
-        cmdbox.style.display = "none";
+        cmdbox.style.display = "none"
       }
 
-      const cmdItems = document.querySelectorAll(".cmd-item");
+      var cmdItems = document.querySelectorAll(".cmd-item")
       cmdItems.forEach(item => {
         item.addEventListener("click", () => {
-          chatinput.value = item.innerText.split(" - ")[0] + " ";
-          if (cmdbox) cmdbox.style.display = "none";
-          chatinput.focus();
-        });
-      });
-    });
+          chatinput.value = item.innerText.split(" - ")[0] + " "
+          if (cmdbox) cmdbox.style.display = "none"
+          chatinput.focus()
+        })
+      })
+    })
 }
 
 if (uploadBtn) {
@@ -511,13 +546,13 @@ if (volumeBtn) {
 }
 
 if (volumeSlider) {
-    const savedVolume = localStorage.getItem('lbchats-volume')
+    var savedVolume = localStorage.getItem('lbchats-volume')
     if (savedVolume) {
         volumeSlider.value = savedVolume
     }
     
     volumeSlider.addEventListener("input", (e) => {
-        const volume = e.target.value / 100
+        var volume = e.target.value / 100
         localStorage.setItem('lbchats-volume', e.target.value)
         
 

@@ -18,11 +18,12 @@ var upgrader = websocket.Upgrader{
 }
 
 type Client struct {
-	conn      *websocket.Conn
-	userID    uint
-	username  string
-	channelID string
-	send      chan []byte
+	conn        *websocket.Conn
+	userID      uint
+	username    string
+	profilePath string
+	channelID   string
+	send        chan []byte
 }
 
 type BroadcastMessage struct {
@@ -54,7 +55,6 @@ func (h *Hub) run() {
 			h.mu.Lock()
 			h.clients[client] = true
 			h.mu.Unlock()
-			log.Printf("Client connected: %s", client.username)
 
 		case client := <-h.unregister:
 			h.mu.Lock()
@@ -63,7 +63,6 @@ func (h *Hub) run() {
 				close(client.send)
 			}
 			h.mu.Unlock()
-			log.Printf("Client disconnected: %s", client.username)
 
 		case message := <-h.broadcast:
 			h.mu.RLock()
@@ -106,11 +105,12 @@ func createWebsockets(router *gin.Engine, db *gorm.DB) {
 		}
 
 		client := &Client{
-			conn:      conn,
-			userID:    session.UserID,
-			username:  session.Username,
-			channelID: channelID,
-			send:      make(chan []byte, 256),
+			conn:        conn,
+			userID:      session.UserID,
+			username:    session.Username,
+			profilePath: session.ProfilePicture,
+			channelID:   channelID,
+			send:        make(chan []byte, 256),
 		}
 
 		hub.register <- client
@@ -136,10 +136,11 @@ func (c *Client) readPump(db *gorm.DB) {
 		}
 
 		var msgData struct {
-			Type      string `json:"type"`
-			Content   string `json:"content"`
-			ChannelID string `json:"channel_id"`
-			SoundURL  string `json:"sound_url"`
+			Type           string `json:"type"`
+			Content        string `json:"content"`
+			ChannelID      string `json:"channel_id"`
+			SoundURL       string `json:"sound_url"`
+			ProfilePicture string `json:"profile_path"`
 		}
 
 		if err := json.Unmarshal(message, &msgData); err != nil {
@@ -154,10 +155,11 @@ func (c *Client) readPump(db *gorm.DB) {
 
 		if msgData.Type == "message" && msgData.Content != "" {
 			msg := Message{
-				UserID:    c.userID,
-				Username:  c.username,
-				ChannelID: msgData.ChannelID,
-				Content:   msgData.Content,
+				UserID:         c.userID,
+				Username:       c.username,
+				ProfilePicture: c.profilePath,
+				ChannelID:      msgData.ChannelID,
+				Content:        msgData.Content,
 			}
 
 			if err := db.Create(&msg).Error; err != nil {
@@ -166,13 +168,14 @@ func (c *Client) readPump(db *gorm.DB) {
 			}
 
 			broadcastData, _ := json.Marshal(map[string]interface{}{
-				"type":       "message",
-				"id":         msg.ID,
-				"user_id":    msg.UserID,
-				"username":   msg.Username,
-				"content":    msg.Content,
-				"channel_id": msg.ChannelID,
-				"created_at": msg.CreatedAt,
+				"type":         "message",
+				"id":           msg.ID,
+				"user_id":      msg.UserID,
+				"username":     msg.Username,
+				"content":      msg.Content,
+				"channel_id":   msg.ChannelID,
+				"created_at":   msg.CreatedAt,
+				"profile_path": msg.ProfilePicture,
 			})
 
 			hub.broadcast <- BroadcastMessage{

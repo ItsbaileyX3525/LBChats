@@ -350,16 +350,36 @@ html, body {
 }
 
 .message {
-    padding: 12px 16px;
-    border-radius: 12px;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
     max-width: 600px;
     word-wrap: break-word;
 }
 
+.message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    object-fit: cover;
+    background-color: var(--hover-color);
+}
+
+.message-body {
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    flex: 1;
+    min-width: 0;
+}
+
 .message.own {
     align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message.own .message-body {
     background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
     color: #fff;
     border: none;
@@ -371,11 +391,18 @@ html, body {
 
 .message.system {
     align-self: center;
-    background: rgba(143, 122, 232, 0.1);
-    border: 1px solid rgba(143, 122, 232, 0.3);
     max-width: 80%;
     text-align: center;
     font-size: 13px;
+}
+
+.message.system .message-body {
+    background: rgba(143, 122, 232, 0.1);
+    border: 1px solid rgba(143, 122, 232, 0.3);
+}
+
+.message.system .message-avatar {
+    display: none;
 }
 
 .message.system .message-username {
@@ -385,6 +412,13 @@ html, body {
 
 .message.system .message-content {
     white-space: pre-line;
+}
+
+.message-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
 }
 
 .message-username {
@@ -639,6 +673,11 @@ html, body {
     font-size: 15px;
   }
 
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
   .message.own {
     align-self: flex-end;
   }
@@ -728,6 +767,11 @@ html, body {
 
   .message {
     max-width: 90%;
+  }
+
+  .message-avatar {
+    width: 28px;
+    height: 28px;
   }
 }
 

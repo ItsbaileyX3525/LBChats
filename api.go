@@ -173,6 +173,20 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
+			//Check if password has at least one letter
+			matched, _ = regexp.MatchString(`[a-zA-Z]`, password)
+			if !matched {
+				c.JSON(200, gin.H{"status": "error", "message": "Password must contain at least 1 letter!"})
+				return
+			}
+
+			//Check if password has at least one symbol
+			matched, _ = regexp.MatchString(`[^a-zA-Z0-9\s]`, password)
+			if !matched {
+				c.JSON(200, gin.H{"status": "error", "message": "Password must contain at least 1 symbol!"})
+				return
+			}
+
 			if len(username) < 4 {
 				c.JSON(200, gin.H{"status": "error", "message": "username must be atleast 4 chars long!"})
 				return
@@ -276,6 +290,91 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			)
 
 			c.Redirect(302, "/login")
+		})
+
+		protectedApi.POST("changePassword", func(c *gin.Context) {
+			type bodyData struct {
+				CurrPassword string `json:"curr_password"`
+				NewPassword  string `json:"new_password"`
+			}
+
+			var body bodyData
+			var err error
+			err = c.ShouldBindBodyWithJSON(&body)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "invalid form data"})
+				return
+			}
+
+			var currPassword string = body.CurrPassword
+			var newPassword string = body.NewPassword
+			var userID uint = c.GetUint("userID")
+
+			var passwordHash string
+			err = db.Raw(
+				"SELECT password from users WHERE id = ?",
+				userID,
+			).Scan(&passwordHash).Error
+			if err == sql.ErrNoRows {
+				c.JSON(200, gin.H{"status": "error", "message": "User doesn't exist"})
+				return
+			}
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "database error"})
+				return
+			}
+
+			err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(currPassword))
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "passwords don't match"})
+				return
+			}
+
+			var matched bool
+
+			if len(newPassword) < 8 {
+				c.JSON(200, gin.H{"status": "error", "message": "Password must be atleast 8 chars long!"})
+				return
+			}
+
+			matched, _ = regexp.MatchString(`\d`, newPassword)
+			if !matched {
+				c.JSON(200, gin.H{"status": "error", "message": "Password must contain atleast 1 number!"})
+				return
+			}
+
+			//Check if password has at least one letter
+			matched, _ = regexp.MatchString(`[a-zA-Z]`, newPassword)
+			if !matched {
+				c.JSON(200, gin.H{"status": "error", "message": "Password must contain at least 1 letter!"})
+				return
+			}
+
+			//Check if password has at least one symbol
+			matched, _ = regexp.MatchString(`[^a-zA-Z0-9\s]`, newPassword)
+			if !matched {
+				c.JSON(200, gin.H{"status": "error", "message": "Password must contain at least 1 symbol!"})
+				return
+			}
+
+			var bytes []byte
+			var hashError error
+			bytes, hashError = bcrypt.GenerateFromPassword([]byte(newPassword), 14)
+			if hashError != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error encrypting password :("})
+				return
+			}
+
+			var newPasswordHash string = string(bytes)
+			log.Print(passwordHash)
+
+			db.Exec(
+				"UPDATE users SET password = ? WHERE id = ?",
+				newPasswordHash,
+				userID,
+			)
+
+			c.JSON(200, gin.H{"status": "success", "message": "Password updated successfully!"})
 		})
 
 		protectedApi.POST("changeUsername", func(c *gin.Context) {

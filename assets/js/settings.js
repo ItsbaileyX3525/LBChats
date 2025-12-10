@@ -40,7 +40,7 @@ passwordForm.addEventListener("submit", async (e) => {
         return
     }
 
-    const resp = await fetch("/api/updatePassword", {
+    const resp = await fetch("/api/changePassword", {
         method: "POST",
         body: JSON.stringify({
             "curr_password": currPassword,

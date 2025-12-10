@@ -1,3 +1,7 @@
+import {
+    showNotif
+} from '/assets/js/notify.js'
+
 const profilePictureForm = document.getElementById("profile-pic-form")
 const usernameForm = document.getElementById("username-form")
 const passwordForm = document.getElementById("password-form")
@@ -18,8 +22,8 @@ profilePictureForm.addEventListener("submit", async (e) => {
     }
 
     const data = await resp.json()
-
-    console.log(data)
+    showNotif(data.message, "success", 4000)
+    profilePictureContainer.src = data.url
 })
 
 usernameForm.addEventListener("submit", async (e) => {
@@ -40,8 +44,7 @@ usernameForm.addEventListener("submit", async (e) => {
     }
 
     const data = await resp.json()
-
-    console.log(data)
+    showNotif(data.message, "success", 4000)
 })
 
 passwordForm.addEventListener("submit", async (e) => {
@@ -52,7 +55,7 @@ passwordForm.addEventListener("submit", async (e) => {
     const confirmPassword = formData.get("confirm_password")
 
     if (newPassword !== confirmPassword) {
-
+        showNotif("Password's don't match", "error", 3500)
         return
     }
 
@@ -72,6 +75,7 @@ passwordForm.addEventListener("submit", async (e) => {
     const data = await resp.json()
 
     console.log(data)
+    showNotif(data.message, data.status)
 })
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -93,8 +97,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     console.log(data)
 
-    if (data.status && data.profilePath) {
-        profilePictureContainer.src = data.profilePath
+    if (data.status == "error" || !data.status) {
+        showNotif("Weird errors be here", "error", 99999)
+        return
     }
+    profilePictureContainer.src = data.profilePath
     
 })

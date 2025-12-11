@@ -411,8 +411,6 @@ async function loadMessages() {
             span2.classList.add("message-time")
             div2.classList.add("message-content")
 
-            console.log(e)
-
             if (!e.ProfilePath) {
                 img.src = "/assets/images/profile.png"
             } else {

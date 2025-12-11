@@ -56,8 +56,9 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 		api.POST("login", func(c *gin.Context) {
 			type bodyData struct {
-				Username string `json:"username"`
-				Password string `json:"password"`
+				Username       string `json:"username"`
+				Password       string `json:"password"`
+				TurnstileToken string `json:"turnstile"`
 			}
 
 			var body bodyData
@@ -67,6 +68,15 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var username = body.Username
 			var password = body.Password
 			var err error
+			var turnstileToken = body.TurnstileToken
+			var turnstileError bool
+			var turnstileErrorMsg string
+
+			turnstileError, turnstileErrorMsg = checkTurnstile(turnstileToken)
+			if !turnstileError {
+				c.JSON(200, gin.H{"status": "error", "message": turnstileErrorMsg})
+				return
+			}
 
 			username = html.EscapeString(username)
 
@@ -146,9 +156,10 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 		//Account creation stuff
 		api.POST("createAccount", func(c *gin.Context) {
 			type bodyData struct {
-				Username string `json:"username"`
-				Password string `json:"password"`
-				Email    string `json:"email"`
+				Username       string `json:"username"`
+				Password       string `json:"password"`
+				Email          string `json:"email"`
+				TurnstileToken string `json:"turnstile"`
 			}
 
 			var body bodyData
@@ -158,6 +169,15 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var username string = body.Username
 			var password string = body.Password
 			var email string = body.Email
+			var turnstileToken = body.TurnstileToken
+			var turnstileError bool
+			var turnstileErrorMsg string
+
+			turnstileError, turnstileErrorMsg = checkTurnstile(turnstileToken)
+			if !turnstileError {
+				c.JSON(200, gin.H{"status": "error", "message": turnstileErrorMsg})
+				return
+			}
 
 			username = html.EscapeString(username)
 

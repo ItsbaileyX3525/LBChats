@@ -102,5 +102,4 @@ document.addEventListener("DOMContentLoaded", async () => {
         return
     }
     profilePictureContainer.src = data.profilePath
-    
 })

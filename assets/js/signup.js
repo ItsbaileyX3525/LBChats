@@ -4,11 +4,47 @@ import {
 
 const form = document.getElementById("signup-form")
 let signedUp = false
+let widgetId = null;
+let turnstileToken = '';
+
+function initTurnstile() {
+    if (!window.turnstile) {
+        setTimeout(initTurnstile, 500);
+        return;
+    }
+    
+    var container = document.getElementById('turnstile-container');
+    if (container) {
+        widgetId = turnstile.render('#turnstile-container', {
+            sitekey: '0x4AAAAAACF6f_jGomlzkgVg',
+            theme: 'dark',
+            callback: function(token) {
+                turnstileToken = token;
+            }
+        });
+    }
+}
+
+function resetTurnstile() {
+    if (window.turnstile && widgetId !== null) {
+        turnstile.reset(widgetId);
+        turnstileToken = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initTurnstile();
+});
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault()
     if (signedUp) {
         return
+    }
+
+    if (!turnstileToken) {
+        showNotif('Please verify you are a human', 'error');
+        return;
     }
 
     signedUp = true
@@ -20,6 +56,7 @@ form.addEventListener("submit", async (e) => {
     if (password !== confirmPassword) {
         showNotif("passwords do not match", "error")
         signedUp = false
+        resetTurnstile()
         return
     }
 
@@ -28,13 +65,15 @@ form.addEventListener("submit", async (e) => {
         body: JSON.stringify({
             "username" : formData.get("username"),
             "password" : password,
-            "email" : formData.get("email")
+            "email" : formData.get("email"),
+            "turnstile": turnstileToken
         })
     })
 
     if (!resp.ok) {
         showNotif("error with fetch request, try again", "error")
         signedUp = false
+        resetTurnstile()
         return
     }
 
@@ -48,5 +87,6 @@ form.addEventListener("submit", async (e) => {
     } else {
         signedUp = false
         showNotif(data.message, data.status)
+        resetTurnstile()
     }
 })

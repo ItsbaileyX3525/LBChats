@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -68,6 +71,21 @@ type InviteCode struct {
 }
 
 const base62Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+func checkTurnstile(token string) (bool, string) {
+	var payload map[string]string = map[string]string{
+		"secret":   turnstileSecretKey,
+		"response": token,
+	}
+	jsonData, _ := json.Marshal(payload)
+	resp, err := http.Post("https://challenges.cloudflare.com/turnstile/v0/siteverify", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return false, err.Error()
+	}
+	defer resp.Body.Close()
+
+	return true, ""
+}
 
 func serveHTML(router *gin.Engine) {
 	router.NoRoute(func(c *gin.Context) {

@@ -15,6 +15,7 @@ var dbName string
 var dbPass string
 var dbUser string
 var secretKey string
+var turnstileSecretKey string
 
 func main() {
 
@@ -24,6 +25,7 @@ func main() {
 	dbUser = os.Getenv("DBUSER")
 	dbPass = os.Getenv("DBPASS")
 	secretKey = os.Getenv("COOKIEKEY")
+	turnstileSecretKey = os.Getenv("TURNSTILEKEY")
 	if secretKey == "" {
 		secretKey = "plssetakey"
 	}

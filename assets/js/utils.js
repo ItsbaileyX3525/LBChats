@@ -18,3 +18,17 @@ export function getCookie(name) {
     }
     return null;
 }
+
+export function parseContent(content) {
+    let parsedData = false
+    const match = content.match(/^!\[(.*?)\]\((.*?)\)$/);
+    if (match) {
+        const altText = match[1];
+        const url = match[2]
+        parsedData = {
+            "alt" : altText,
+            "url" : url
+        }
+    }
+    return parsedData
+}

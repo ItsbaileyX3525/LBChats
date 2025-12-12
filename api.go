@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"html"
 	"log"
-	"os"
+	"math/rand/v2"
 	"regexp"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/wabarc/go-catbox"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -35,8 +34,6 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			c.JSON(200, gin.H{"status": "success", "message": "endpoint working probs"})
 		})
 
-		//TODO: Add turnstile stuff to the account create/login methods
-
 		api.POST("validateCookie", func(c *gin.Context) {
 			var session *Session
 			var err error
@@ -48,7 +45,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 			var profilePath string = session.ProfilePicture
 			if profilePath == "" {
-				profilePath = "/assets/images/profile.png"
+				profilePath = fmt.Sprintf("/assets/images/profile%d.png", rand.IntN(4))
 			}
 
 			c.JSON(200, gin.H{"status": "success", "message": "Valid session", "userID": session.UserID, "username": session.Username, "profilePath": profilePath})
@@ -320,53 +317,17 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 		})
 
 		protectedApi.POST("changeProfile", func(c *gin.Context) {
-			file, err := c.FormFile("profile_picture")
+			var allowedTypes []string = []string{"image/jpeg", "image/png", "image/gif", "image/webp"}
+			var url string
+			var err error
+			url, err = uploadFileToCatbox(c, "profile_picture", 5*1024*1024, allowedTypes)
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "No file uploaded"})
+				c.JSON(200, gin.H{"status": "error", "message": err.Error()})
 				return
 			}
 
-			if file.Size > 5*1024*1024 {
-				c.JSON(200, gin.H{"status": "error", "message": "File size exceeds 5MB limit"})
-				return
-			}
-
-			contentType := file.Header.Get("Content-Type")
-			if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/gif" && contentType != "image/webp" {
-				c.JSON(200, gin.H{"status": "error", "message": "Only image files (JPEG, PNG, GIF, WEBP) are allowed"})
-				return
-			}
-
-			src, err := file.Open()
-			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Failed to open uploaded file"})
-				return
-			}
-			defer src.Close()
-
-			tempFile, err := os.CreateTemp("", "profile-*.jpg")
-			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Failed to create temp file"})
-				return
-			}
-			tempPath := tempFile.Name()
-			defer os.Remove(tempPath)
-
-			_, err = tempFile.ReadFrom(src)
-			tempFile.Close()
-			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Failed to save uploaded file"})
-				return
-			}
-
-			url, err := catbox.New(nil).Upload(tempPath)
-			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "Failed to upload to Catbox"})
-				return
-			}
-
-			userID := c.GetUint("userID")
-			if err := db.Exec("UPDATE users SET profile_picture = ? WHERE id = ?", url, userID).Error; err != nil {
+			var userID uint = c.GetUint("userID")
+			if err = db.Exec("UPDATE users SET profile_picture = ? WHERE id = ?", url, userID).Error; err != nil {
 				c.JSON(200, gin.H{"status": "error", "message": "Failed to update profile picture"})
 				return
 			}
@@ -710,6 +671,19 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			c.JSON(200, gin.H{"status": "success", "message": "joined channel successfully!"})
 		})
 
+		protectedApi.POST("uploadImage", func(c *gin.Context) {
+			var allowedTypes []string = []string{"image/jpeg", "image/png", "image/gif", "image/webp"}
+			var url string
+			var err error
+			url, err = uploadFileToCatbox(c, "image", 12*1024*1024, allowedTypes)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": err.Error()})
+				return
+			}
+
+			c.JSON(200, gin.H{"status": "success", "message": "image uploaded", "url": url})
+		})
+
 		protectedApi.POST("uploadMessage", func(c *gin.Context) {
 			type bodyData struct {
 				Message   string `json:"message"`
@@ -728,8 +702,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			var userID uint
-			userID = c.GetUint("userID")
+			var userID uint = c.GetUint("userID")
 
 			var username string
 			var scanErr *gorm.DB = db.Raw(
@@ -743,7 +716,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 			var profilePicture string = c.GetString("profile_picture")
 			if profilePicture == "" {
-				profilePicture = "/assets/images/profile.png"
+				profilePicture = fmt.Sprintf("/assets/images/profile%d.png", rand.IntN(4))
 			}
 
 			var message Message

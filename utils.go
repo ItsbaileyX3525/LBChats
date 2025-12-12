@@ -7,12 +7,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
+	mathRand "math/rand/v2"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wabarc/go-catbox"
 	"gorm.io/gorm"
 )
 
@@ -133,7 +136,7 @@ func createSession(db *gorm.DB, userID uint, username string, email string) (str
 	var profilePicture string
 	db.Raw("SELECT profile_picture FROM users WHERE id = ?", userID).Scan(&profilePicture)
 	if profilePicture == "" {
-		profilePicture = "/assets/images/profile.png"
+		profilePicture = fmt.Sprintf("/assets/images/profile%d.png", mathRand.IntN(4))
 	}
 
 	session := Session{
@@ -218,4 +221,60 @@ func createInviteLink() string {
 
 	return uniqueID
 
+}
+
+// uploadFileToCatbox handles file upload validation and uploads to Catbox
+// Returns the uploaded file URL and any error encountered
+func uploadFileToCatbox(c *gin.Context, formFieldName string, maxSizeBytes int64, allowedTypes []string) (string, error) {
+	file, err := c.FormFile(formFieldName)
+	if err != nil {
+		return "", errors.New("no file uploaded")
+	}
+
+	if file.Size > maxSizeBytes {
+		return "", errors.New("file size exceeds limit")
+	}
+
+	contentType := file.Header.Get("Content-Type")
+	isAllowed := false
+	for _, allowedType := range allowedTypes {
+		if contentType == allowedType {
+			isAllowed = true
+			break
+		}
+	}
+	if !isAllowed {
+		return "", errors.New("file type not allowed")
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return "", errors.New("failed to open uploaded file")
+	}
+	defer src.Close()
+
+	ext := filepath.Ext(file.Filename)
+	if ext == "" {
+		ext = ".jpg"
+	}
+
+	tempFile, err := os.CreateTemp("", "upload-*"+ext)
+	if err != nil {
+		return "", errors.New("failed to create temp file")
+	}
+	tempPath := tempFile.Name()
+	defer os.Remove(tempPath)
+
+	_, err = tempFile.ReadFrom(src)
+	tempFile.Close()
+	if err != nil {
+		return "", errors.New("failed to save uploaded file")
+	}
+
+	url, err := catbox.New(nil).Upload(tempPath)
+	if err != nil {
+		return "", errors.New("failed to upload to Catbox")
+	}
+
+	return url, nil
 }

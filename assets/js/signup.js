@@ -16,7 +16,7 @@ function initTurnstile() {
     var container = document.getElementById('turnstile-container');
     if (container) {
         widgetId = turnstile.render('#turnstile-container', {
-            sitekey: '0x4AAAAAACF6f_jGomlzkgVg',
+            sitekey: '0x4AAAAAACDFfOKm7uvwfqiR',
             theme: 'dark',
             callback: function(token) {
                 turnstileToken = token;

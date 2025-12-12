@@ -1,5 +1,5 @@
 import {
-    setCookie, getCookie
+    setCookie, getCookie, parseContent
 } from '/assets/js/utils.js'
 
 import {
@@ -27,7 +27,6 @@ const generateInviteBtn = document.getElementById("generateInviteBtn")
 const closeChannelActions = document.getElementById("closeChannelActions")
 const inviteCodeDisplay = document.getElementById("inviteCodeDisplay")
 const generatedInviteCode = document.getElementById("generatedInviteCode")
-const uploadBtn = document.getElementById("uploadbtn")
 const volumeBtn = document.getElementById("volumeBtn")
 const volumeSliderContainer = document.getElementById("volumeSliderContainer")
 const volumeSlider = document.getElementById("volume-slider")
@@ -254,7 +253,7 @@ async function loadProfileUsername() {
 
         if (data.status === "success" && data.username) {
             profilename.innerText = data.username
-            profilepic.src = data.profilePath || "/assets/images/profile.png"
+            profilepic.src = data.profilePath || `/assets/images/profile${Math.floor(Math.random() * 4) + 1}.png`
         } else {
             profilename.innerText = "Guest"
         }
@@ -412,7 +411,7 @@ async function loadMessages() {
             div2.classList.add("message-content")
 
             if (!e.ProfilePath) {
-                img.src = "/assets/images/profile.png"
+                img.src = `/assets/images/profile${Math.floor(Math.random() * 4) + 1}.png`
             } else {
                 img.src = e.ProfilePath
             }
@@ -428,7 +427,15 @@ async function loadMessages() {
             
             span.innerText = e.Username
             span2.innerText = new Date(e.created_at || e.CreatedAt).toLocaleString()
-            div2.innerText = e.Content
+            let parsed = parseContent(e.Content)
+            if (parsed) {
+                const imgMsg = document.createElement("img")
+                imgMsg.src = parsed.url
+                imgMsg.alt = parsed.alt
+                div2.appendChild(imgMsg)
+            } else {
+                div2.innerText = e.Content
+            }
         }
         
         if (chatarea) {
@@ -454,7 +461,7 @@ async function loadMessages() {
             div2.classList.add("message-content")
             
             if (!e.ProfilePath) {
-                img.src = "/assets/images/profile.png"
+                img.src = `/assets/images/profile${Math.floor(Math.random() * 4) + 1}.png`
             } else {
                 img.src = e.ProfilePath
             }
@@ -470,7 +477,15 @@ async function loadMessages() {
             
             span.innerText = e.Username
             span2.innerText = new Date(e.created_at || e.CreatedAt).toLocaleString()
-            div2.innerText = e.Content
+            let parsed = parseContent(e.Content)
+            if (parsed) {
+                const imgMsg = document.createElement("img")
+                imgMsg.src = parsed.url
+                imgMsg.alt = parsed.alt
+                div2.appendChild(imgMsg)
+            } else {
+                div2.innerText = e.Content
+            }
             
             if (messageContainer.firstChild) {
                 messageContainer.insertBefore(div, messageContainer.firstChild)
@@ -525,12 +540,6 @@ if (chatinput) {
         })
       })
     })
-}
-
-if (uploadBtn) {
-    uploadBtn.addEventListener("click", () => {
-        alert("File upload feature is not implemented yet.");
-    });
 }
 
 if (volumeBtn) {

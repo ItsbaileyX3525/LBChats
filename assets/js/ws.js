@@ -1,4 +1,4 @@
-import { getCookie } from '/assets/js/utils.js'
+import { getCookie, parseContent } from '/assets/js/utils.js'
 
 let ws = null
 let reconnectAttempt = false
@@ -72,7 +72,7 @@ function addMessageToUI(data) {
     span2.classList.add("message-time")
     div2.classList.add("message-content")
 
-    img.src = data.profile_path || "/assets/images/profile.png"
+    img.src = data.profile_path || `/assets/images/profile${Math.floor(Math.random() * 4) + 1}.png`
     img.alt = "Avatar"
     
     messageHeader.appendChild(span)
@@ -85,7 +85,15 @@ function addMessageToUI(data) {
     
     span.innerText = data.username
     span2.innerText = new Date(data.created_at).toLocaleString()
-    div2.innerText = data.content
+    let parsed = parseContent(data.content)
+    if (parsed) {
+        const imgMsg = document.createElement("img")
+        imgMsg.src = parsed.url
+        imgMsg.alt = parsed.alt
+        div2.appendChild(imgMsg)
+    } else {
+        div2.innerText = data.content
+    }
 
     if (chatarea) {
         chatarea.scrollTop = chatarea.scrollHeight

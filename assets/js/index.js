@@ -6,6 +6,11 @@ import {
     connectWebSocket, closeWebSocket
 } from '/assets/js/ws.js'
 
+import {
+    addSystemMessage
+} from '/assets/js/systemMessage.js'
+
+
 const createChannelBtn = document.getElementById("createChannelBtn")
 const joinChannelBtn = document.getElementById("joinChannelBtn")
 const themeToggle = document.getElementById('themeToggle')
@@ -190,6 +195,8 @@ async function joinChannel(inviteCode) {
     
     if (data.status === "success") {
         loadUserChannels()
+    } else {
+        addSystemMessage(data.message)
     }
 }
 

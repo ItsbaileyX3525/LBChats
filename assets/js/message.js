@@ -9,6 +9,10 @@ import {
     getCookie
 } from '/assets/js/utils.js'
 
+import {
+    addSystemMessage
+} from '/assets/js/systemMessage.js'
+
 const form = document.getElementById("chatbarform")
 const chatInput = document.getElementById("chatinput")
 const uploadButton = document.getElementById("uploadbtn")
@@ -21,6 +25,8 @@ async function submitMessage(message) {
         const wordSplit = message.split(" ")
         if (validSlashCommands.includes(wordSplit[0])) {
             wordLists[wordSplit[0]](wordSplit[1])
+        } else {
+            addSystemMessage("Command not found")
         }
         return
     }
@@ -86,13 +92,12 @@ uploadButton.addEventListener("click", () => {
         input.remove()
 
         if (data.status && data.status == "success") {
-            console.log(data.message)
             if (data.url) {
                 chatinput.value = `![Image](${data.url})`
                 sendButton.click()
             }
         } else {
-            console.log(data.message)
+            addSystemMessage(data.message)
         }
         
     })

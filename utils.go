@@ -196,6 +196,66 @@ func sessionMiddleware(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+type PermissionCheckResult struct {
+	HasPermission bool
+	TargetUserID  uint
+	ErrorMessage  string
+}
+
+func permissionCheck(db *gorm.DB, userID uint, targetUser string, channelID string) PermissionCheckResult {
+	var result PermissionCheckResult
+	var validUser uint
+
+	err := db.Raw(
+		"SELECT user_id FROM user_channels WHERE user_id = ? AND channel_id = ?",
+		targetUser,
+		channelID,
+	).Scan(&validUser).Error
+
+	if err != nil {
+		result.ErrorMessage = "Database error"
+		return result
+	}
+
+	if validUser == 0 {
+		result.ErrorMessage = "User not in channel"
+		return result
+	}
+
+	result.TargetUserID = validUser
+
+	var channelOwner uint
+	err = db.Raw(
+		"SELECT owner_id FROM channels WHERE id = ?",
+		channelID,
+	).Scan(&channelOwner).Error
+	if err != nil {
+		result.ErrorMessage = "Channel doesn't exist"
+		return result
+	}
+
+	if channelOwner == userID {
+		result.HasPermission = true
+		return result
+	}
+
+	var channel Channel
+	db.First(&channel, "id = ?", channelID)
+
+	var moderators []uint
+	json.Unmarshal(channel.Moderators, &moderators)
+
+	for _, v := range moderators {
+		if userID == v {
+			result.HasPermission = true
+			return result
+		}
+	}
+
+	result.ErrorMessage = "Invalid permissions"
+	return result
+}
+
 func base62Encode(n uint32) string {
 	if n == 0 {
 		return string(base62Alphabet[0])

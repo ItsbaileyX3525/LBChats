@@ -1,4 +1,7 @@
 import { getCookie, parseContent, handleImage } from '/assets/js/utils.js'
+import {
+    addSystemMessage
+} from '/assets/js/systemMessage.js'
 
 let ws = null
 let reconnectAttempt = false
@@ -38,6 +41,8 @@ export function connectWebSocket() {
                 playSound(data.sound_url)
             } else if (data.type === 'kick') {
                 handleKick(data.channel_id)
+            } else if (data.type === 'ban') {
+                handleKick(data.channel_id, true)
             }
         } catch (error) {}
     }
@@ -123,14 +128,17 @@ function playSound(soundUrl) {
     } catch (error) {}
 }
 
-function handleKick(channelId) {
+function handleKick(channelId, isBan = false) {    
     const channelElement = document.getElementById(channelId)
     if (channelElement) {
         channelElement.remove()
     }
     
+    addSystemMessage(isBan ? "You have been banned from this channel." : "You have been kicked from this channel.")
+    
     if (getCookie("room") === channelId) {
         document.cookie = "room=public; path=/"
+        closeWebSocket()
         const publicChannel = document.getElementById("public")
         if (publicChannel) {
             publicChannel.click()

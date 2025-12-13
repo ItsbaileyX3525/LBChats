@@ -32,7 +32,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 	var api = router.Group("api")
 	{
 		api.GET("test", func(c *gin.Context) {
-			c.JSON(200, gin.H{"status": "success", "message": "endpoint working probs"})
+			c.JSON(200, gin.H{"status": "success", "message": "Endpoint working probs"})
 		})
 
 		api.POST("validateCookie", func(c *gin.Context) {
@@ -114,7 +114,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 			err = userIDFetch.Scan(&userID)
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "idek how this happened."})
+				c.JSON(200, gin.H{"status": "error", "message": "Idek how this happened."})
 				return
 			}
 
@@ -127,14 +127,14 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 			err = emailFetch.Scan(&email)
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "idek how this happened."})
+				c.JSON(200, gin.H{"status": "error", "message": "Idek how this happened."})
 				return
 			}
 
 			var sessionID string
 			sessionID, err = createSession(db, userID, username, email)
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "error creating a session"})
+				c.JSON(200, gin.H{"status": "error", "message": "Error creating a session"})
 				return
 			}
 
@@ -183,7 +183,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var matched bool
 			matched, _ = regexp.MatchString(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, email)
 			if !matched {
-				c.JSON(200, gin.H{"status": "error", "message": "email is invalid"})
+				c.JSON(200, gin.H{"status": "error", "message": "Email is invalid"})
 				return
 			}
 
@@ -213,7 +213,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			if len(username) < 4 {
-				c.JSON(200, gin.H{"status": "error", "message": "username must be atleast 4 chars long!"})
+				c.JSON(200, gin.H{"status": "error", "message": "Username must be atleast 4 chars long!"})
 				return
 			}
 
@@ -261,7 +261,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 			check = userIDFetch.Scan(&userID)
 			if check != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "idek how this happened."})
+				c.JSON(200, gin.H{"status": "error", "message": "Idek how this happened."})
 				return
 			}
 
@@ -274,7 +274,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var sessionID string
 			sessionID, check = createSession(db, userID, username, email)
 			if check != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "error creating a session"})
+				c.JSON(200, gin.H{"status": "error", "message": "Error creating a session"})
 				return
 			}
 
@@ -317,6 +317,69 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			c.Redirect(302, "/login")
 		})
 
+		protectedApi.POST("banMember", func(c *gin.Context) {
+			type bodyData struct {
+				ChannelID string `json:"channel_id"`
+				KickUser  string `json:"kick_user"`
+			}
+
+			var body bodyData
+			var err error
+			err = c.ShouldBindBodyWithJSON(&body)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Invalid post data"})
+				return
+			}
+
+			var channelID = body.ChannelID
+			var userBan = body.KickUser
+			var userID uint = c.GetUint("userID")
+
+			permResult := permissionCheck(db, userID, userBan, channelID)
+			if !permResult.HasPermission {
+				c.JSON(200, gin.H{"status": "error", "message": permResult.ErrorMessage})
+				return
+			}
+
+			err = db.Exec(
+				"DELETE FROM user_channels WHERE user_id = ? AND channel_id = ?",
+				permResult.TargetUserID,
+				channelID,
+			).Error
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error kicking user"})
+				return
+			}
+
+			err = db.Exec(`
+				UPDATE users 
+				SET banned_channels = JSON_ARRAY_APPEND(
+					COALESCE(banned_channels, JSON_ARRAY()), 
+					'$', 
+				 ?
+				) 
+				WHERE id = ?`,
+				channelID,
+				permResult.TargetUserID,
+			).Error
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "Error banning user"})
+				return
+			}
+
+			kickData, _ := json.Marshal(map[string]interface{}{
+				"type":       "ban",
+				"channel_id": channelID,
+			})
+			hub.kick <- KickMessage{
+				userID:    permResult.TargetUserID,
+				channelID: channelID,
+				data:      kickData,
+			}
+
+			c.JSON(200, gin.H{"status": "success", "message": fmt.Sprintf("Banned user: %s", userBan)})
+		})
+
 		protectedApi.POST("kickMember", func(c *gin.Context) {
 			type bodyData struct {
 				ChannelID string `json:"channel_id"`
@@ -327,65 +390,17 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var err error
 			err = c.ShouldBindBodyWithJSON(&body)
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "invalid post data", "error": err.Error()})
+				c.JSON(200, gin.H{"status": "error", "message": "Invalid post data", "error": err.Error()})
 				return
 			}
 
-			var channelOwner uint
 			var channelID = body.ChannelID
 			var userKick = body.KickUser
 			var userID uint = c.GetUint("userID")
-			var channel Channel
-			var hasPerms bool = false
-			var validUser uint
 
-			err = db.Raw(
-				"SELECT user_id FROM user_channels WHERE user_id = ? AND channel_id = ?",
-				userKick,
-				channelID,
-			).Scan(&validUser).Error
-
-			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "databse error"})
-				return
-			}
-
-			if validUser == 0 {
-				c.JSON(200, gin.H{"status": "error", "message": "user not in channel"})
-				return
-			}
-
-			err = db.Raw(
-				"SELECT owner_id FROM channels WHERE id = ?",
-				channelID,
-			).Scan(&channelOwner).Error
-			if err == sql.ErrNoRows {
-				c.JSON(200, gin.H{"status": "error", "message": "channel doesn't exist"})
-				return
-			}
-			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "database error"})
-				return
-			}
-
-			db.First(&channel, "id = ?", channelID)
-
-			var moderators []uint
-			json.Unmarshal(channel.Moderators, &moderators)
-
-			for _, v := range moderators {
-				if userID == v {
-					hasPerms = true
-					break
-				}
-			}
-
-			if channelOwner == userID {
-				hasPerms = true
-			}
-
-			if !hasPerms {
-				c.JSON(200, gin.H{"status": "error", "message": "invalid permissions"})
+			permResult := permissionCheck(db, userID, userKick, channelID)
+			if !permResult.HasPermission {
+				c.JSON(200, gin.H{"status": "error", "message": permResult.ErrorMessage})
 				return
 			}
 
@@ -395,7 +410,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				channelID,
 			).Error
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "error kicking user"})
+				c.JSON(200, gin.H{"status": "error", "message": "Error kicking user"})
 				return
 			}
 
@@ -404,12 +419,12 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				"channel_id": channelID,
 			})
 			hub.kick <- KickMessage{
-				userID:    validUser,
+				userID:    permResult.TargetUserID,
 				channelID: channelID,
 				data:      kickData,
 			}
 
-			c.JSON(200, gin.H{"status": "success", "message": fmt.Sprintf("kicked user: %s", userKick)})
+			c.JSON(200, gin.H{"status": "success", "message": fmt.Sprintf("Kicked user: %s", userKick)})
 		})
 
 		protectedApi.POST("changeProfile", func(c *gin.Context) {
@@ -446,7 +461,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var err error
 			err = c.ShouldBindBodyWithJSON(&body)
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "invalid form data"})
+				c.JSON(200, gin.H{"status": "error", "message": "Invalid form data"})
 				return
 			}
 
@@ -464,13 +479,13 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "database error"})
+				c.JSON(200, gin.H{"status": "error", "message": "Database error"})
 				return
 			}
 
 			err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(currPassword))
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "passwords don't match"})
+				c.JSON(200, gin.H{"status": "error", "message": "Passwords don't match"})
 				return
 			}
 
@@ -534,7 +549,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var err error
 			err = c.ShouldBindBodyWithJSON(&body)
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "invalid form data"})
+				c.JSON(200, gin.H{"status": "error", "message": "Invalid form data"})
 				return
 			}
 
@@ -547,7 +562,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				username,
 			).Scan(&usedUsername).Error
 			if err != nil && err != sql.ErrNoRows {
-				c.JSON(200, gin.H{"status": "error", "message": "database error"})
+				c.JSON(200, gin.H{"status": "error", "message": "Database error"})
 				return
 			}
 
@@ -557,7 +572,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				currUsername,
 			).Error
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "database error"})
+				c.JSON(200, gin.H{"status": "error", "message": "Database error"})
 				return
 			}
 
@@ -567,11 +582,11 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				currUsername,
 			).Error
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "failed to update session"})
+				c.JSON(200, gin.H{"status": "error", "message": "Failed to update session"})
 				return
 			}
 
-			c.JSON(200, gin.H{"status": "success", "message": "username changed successfully"})
+			c.JSON(200, gin.H{"status": "success", "message": "Username changed successfully"})
 		})
 
 		protectedApi.POST("userChannels", func(c *gin.Context) {
@@ -616,7 +631,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var err error
 			err = c.ShouldBindBodyWithJSON(&body)
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "invalid post data"})
+				c.JSON(200, gin.H{"status": "error", "message": "Invalid post data"})
 				return
 			}
 
@@ -658,7 +673,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			var err error
 			err = c.ShouldBindBodyWithJSON(&body)
 			if err != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "invalid post data"})
+				c.JSON(200, gin.H{"status": "error", "message": "Invalid post data"})
 				return
 			}
 
@@ -674,7 +689,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			if scanErr != nil {
 				log.Print("error with something")
 				log.Print(scanErr)
-				c.JSON(200, gin.H{"status": "error", "message": "error with something"})
+				c.JSON(200, gin.H{"status": "error", "message": "Error with something"})
 				return
 			}
 
@@ -689,7 +704,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				inviteLink,
 			)
 
-			c.JSON(200, gin.H{"status": "success", "message": "invite link created successfully!", "invite_link": inviteLink})
+			c.JSON(200, gin.H{"status": "success", "message": "Invite link created successfully!", "invite_link": inviteLink})
 		})
 
 		protectedApi.POST("createChannel", func(c *gin.Context) {
@@ -747,10 +762,22 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				InviteLink,
 			).Scan(&channelId)
 			if result.Error == sql.ErrNoRows {
-				c.JSON(200, gin.H{"status": "error", "message": "invite code doesn't exist"})
+				c.JSON(200, gin.H{"status": "error", "message": "Invite code doesn't exist"})
 				return
 			} else if result.Error != sql.ErrNoRows && result.Error != nil {
-				c.JSON(200, gin.H{"status": "error", "message": "database error"})
+				c.JSON(200, gin.H{"status": "error", "message": "Database error"})
+				return
+			}
+
+			var isBanned uint
+			db.Raw(
+				"SELECT COUNT(*) FROM users WHERE id = ? AND JSON_CONTAINS(COALESCE(banned_channels, JSON_ARRAY()), ?)",
+				userID,
+				fmt.Sprintf("\"%s\"", channelId),
+			).Scan(&isBanned)
+
+			if isBanned > 0 {
+				c.JSON(200, gin.H{"status": "error", "message": "You are banned from this channel"})
 				return
 			}
 
@@ -764,7 +791,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			c.JSON(200, gin.H{"status": "success", "message": "joined channel successfully!"})
+			c.JSON(200, gin.H{"status": "success", "message": "Joined channel successfully!"})
 		})
 
 		protectedApi.POST("uploadImage", func(c *gin.Context) {
@@ -777,7 +804,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 				return
 			}
 
-			c.JSON(200, gin.H{"status": "success", "message": "image uploaded", "url": url})
+			c.JSON(200, gin.H{"status": "success", "message": "Image uploaded", "url": url})
 		})
 
 		protectedApi.POST("uploadMessage", func(c *gin.Context) {
@@ -808,7 +835,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			).Scan(&inChannel)
 
 			if inChannel == 0 {
-				c.JSON(200, gin.H{"status": "error", "message": "you are not in this channel"})
+				c.JSON(200, gin.H{"status": "error", "message": "You are not in this channel"})
 				return
 			}
 

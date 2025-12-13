@@ -132,6 +132,31 @@ export const wordLists = {
             addSystemMessage(data.message)
         }
     },
+    "/ban": async function(args) {
+        let roomID = getCookie("room")
+
+        if (roomID === "public") {
+            addSystemMessage("Invalid permissions")
+            return
+        }
+
+        const resp = await fetch ("/api/banMember", {
+            method: "POST",
+            body: JSON.stringify({
+                "channel_id" : roomID,
+                "kick_user": args
+            })
+        })
+
+        if (!resp.ok) {
+            addSystemMessage("Error with fetch request")
+            return
+        }
+
+        const data = await resp.json()
+
+        addSystemMessage(data.message)
+    },
     "/leaveGroup": async function() {
         let roomID = getCookie("room")
         

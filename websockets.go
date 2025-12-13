@@ -89,7 +89,7 @@ func (h *Hub) run() {
 		case kick := <-h.kick:
 			h.mu.RLock()
 			for client := range h.clients {
-				if client.userID == kick.userID && client.channelID == kick.channelID {
+				if client.userID == kick.userID {
 					select {
 					case client.send <- kick.data:
 					default:
@@ -118,6 +118,18 @@ func createWebsockets(router *gin.Engine, db *gorm.DB) {
 		channelID := c.Query("channel_id")
 		if channelID == "" {
 			channelID = "public"
+		}
+
+		var inChannel uint
+		db.Raw(
+			"SELECT user_id FROM user_channels WHERE user_id = ? AND channel_id = ?",
+			session.UserID,
+			channelID,
+		).Scan(&inChannel)
+
+		if inChannel == 0 {
+			c.JSON(403, gin.H{"status": "error", "message": "not in channel"})
+			return
 		}
 
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -172,6 +184,18 @@ func (c *Client) readPump(db *gorm.DB) {
 
 		if msgData.ChannelID != c.channelID {
 			log.Printf("Channel mismatch: client on %s, message for %s", c.channelID, msgData.ChannelID)
+			continue
+		}
+
+		var inChannel uint
+		db.Raw(
+			"SELECT user_id FROM user_channels WHERE user_id = ? AND channel_id = ?",
+			c.userID,
+			c.channelID,
+		).Scan(&inChannel)
+
+		if inChannel == 0 {
+			log.Printf("User %d no longer in channel %s", c.userID, c.channelID)
 			continue
 		}
 

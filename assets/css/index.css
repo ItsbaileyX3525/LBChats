@@ -401,10 +401,6 @@ html, body {
     border: 1px solid rgba(143, 122, 232, 0.3);
 }
 
-.message.system .message-avatar {
-    display: none;
-}
-
 .message.system .message-username {
     color: var(--accent-color);
     font-weight: 700;
@@ -990,8 +986,6 @@ html, body {
   #volume-slider {
     width: 6px;
     height: 100px;
-    -webkit-appearance: slider-vertical;
-    appearance: slider-vertical;
     margin: 0;
   }
 

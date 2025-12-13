@@ -136,7 +136,7 @@ func createSession(db *gorm.DB, userID uint, username string, email string) (str
 	var profilePicture string
 	db.Raw("SELECT profile_picture FROM users WHERE id = ?", userID).Scan(&profilePicture)
 	if profilePicture == "" {
-		profilePicture = fmt.Sprintf("/assets/images/profile%d.png", mathRand.IntN(4))
+		profilePicture = fmt.Sprintf("/assets/images/profile%d.png", mathRand.IntN(4)+1)
 	}
 
 	session := Session{

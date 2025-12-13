@@ -45,7 +45,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 			var profilePath string = session.ProfilePicture
 			if profilePath == "" {
-				profilePath = fmt.Sprintf("/assets/images/profile%d.png", rand.IntN(4))
+				profilePath = fmt.Sprintf("/assets/images/profile%d.png", rand.IntN(4)+1)
 			}
 
 			c.JSON(200, gin.H{"status": "success", "message": "Valid session", "userID": session.UserID, "username": session.Username, "profilePath": profilePath})
@@ -716,7 +716,7 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 
 			var profilePicture string = c.GetString("profile_picture")
 			if profilePicture == "" {
-				profilePicture = fmt.Sprintf("/assets/images/profile%d.png", rand.IntN(4))
+				profilePicture = fmt.Sprintf("/assets/images/profile%d.png", rand.IntN(4)+1)
 			}
 
 			var message Message

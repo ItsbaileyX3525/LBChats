@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -279,4 +280,12 @@ func uploadFileToCatbox(c *gin.Context, formFieldName string, maxSizeBytes int64
 	}
 
 	return url, nil
+}
+
+func CacheStatic(maxAge time.Duration) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Cache-Control", "public, max-age="+
+			strconv.Itoa(int(maxAge.Seconds())))
+		c.Next()
+	}
 }

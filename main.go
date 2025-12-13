@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -44,7 +45,7 @@ func main() {
 	}
 
 	serveEndpoints(router, db)
-
+	router.Use(CacheStatic(24 * time.Hour))
 	router.Static("/assets", "./assets")
 
 	serveHTML(router)

@@ -32,3 +32,23 @@ export function parseContent(content) {
     }
     return parsedData
 }
+
+function isNearBottom(el, threshold = 100) {
+	return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+}
+
+function scrollToBottom(el) {
+	el.scrollTop = el.scrollHeight;
+}
+
+export function handleImage(img, chat) {
+	const shouldStick = isNearBottom(chat);
+
+	if (!img.complete) {
+		img.addEventListener("load", () => {
+			if (shouldStick) {
+				scrollToBottom(chat);
+			}
+		}, { once: true });
+	}
+}

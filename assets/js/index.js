@@ -1,5 +1,5 @@
 import {
-    setCookie, getCookie, parseContent
+    setCookie, getCookie, parseContent, handleImage
 } from '/assets/js/utils.js'
 
 import {
@@ -433,6 +433,7 @@ async function loadMessages() {
                 imgMsg.src = parsed.url
                 imgMsg.alt = parsed.alt
                 div2.appendChild(imgMsg)
+                handleImage(imgMsg, chatarea)
             } else {
                 div2.innerText = e.Content
             }

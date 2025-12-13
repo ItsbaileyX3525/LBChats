@@ -1,7 +1,9 @@
-import { getCookie, parseContent } from '/assets/js/utils.js'
+import { getCookie, parseContent, handleImage } from '/assets/js/utils.js'
 
 let ws = null
 let reconnectAttempt = false
+const messageContainer = document.getElementById("messages")
+const chatarea = document.getElementById("chatarea")
 
 export function getWebSocket() {
     return ws
@@ -52,8 +54,6 @@ export function connectWebSocket() {
 }
 
 function addMessageToUI(data) {
-    const messageContainer = document.getElementById("messages")
-    const chatarea = document.getElementById("chatarea")
     if (!messageContainer) return
 
     const div = document.createElement("div")
@@ -91,6 +91,7 @@ function addMessageToUI(data) {
         imgMsg.src = parsed.url
         imgMsg.alt = parsed.alt
         div2.appendChild(imgMsg)
+        handleImage(imgMsg, chatarea)
     } else {
         div2.innerText = data.content
     }

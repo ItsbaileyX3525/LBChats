@@ -20,19 +20,21 @@ import (
 )
 
 type User struct {
-	ID             uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	Username       string `gorm:"size:255;not null" json:"username"`
-	Password       string `gorm:"size:255;not null" json:"-"`
-	Email          string `gorm:"size:255;not null" json:"email"`
-	ProfilePicture string `gorm:"size:255" json:"profile_picture"`
+	ID             uint            `gorm:"primaryKey;autoIncrement" json:"id"`
+	Username       string          `gorm:"size:255;not null" json:"username"`
+	Password       string          `gorm:"size:255;not null" json:"-"`
+	Email          string          `gorm:"size:255;not null" json:"email"`
+	ProfilePicture string          `gorm:"size:255" json:"profile_picture"`
+	BannedChannels json.RawMessage `gorm:"column:banned_channels"`
 }
 
 type Channel struct {
-	ID        string    `gorm:"primaryKey;size:255" json:"id"`
-	Name      string    `gorm:"size:255;not null" json:"name"`
-	OwnerID   uint      `gorm:"not null" json:"owner_id"`
-	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
-	Owner     User      `gorm:"foreignKey:OwnerID" json:"owner,omitempty"`
+	ID         string          `gorm:"primaryKey;size:255" json:"id"`
+	Name       string          `gorm:"size:255;not null" json:"name"`
+	OwnerID    uint            `gorm:"not null" json:"owner_id"`
+	Moderators json.RawMessage `gorm:"column:moderators"`
+	CreatedAt  time.Time       `gorm:"autoCreateTime" json:"created_at"`
+	Owner      User            `gorm:"foreignKey:OwnerID" json:"owner,omitempty"`
 }
 
 type Message struct {

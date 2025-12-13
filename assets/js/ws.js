@@ -36,6 +36,8 @@ export function connectWebSocket() {
                 addMessageToUI(data)
             } else if (data.type === 'sound') {
                 playSound(data.sound_url)
+            } else if (data.type === 'kick') {
+                handleKick(data.channel_id)
             }
         } catch (error) {}
     }
@@ -79,6 +81,7 @@ function addMessageToUI(data) {
     messageHeader.appendChild(span2)
     messageBody.appendChild(messageHeader)
     messageBody.appendChild(div2)
+    div.dataset.userId = data.UserID || data.user_id || ""
     div.appendChild(img)
     div.appendChild(messageBody)
     messageContainer.appendChild(div)
@@ -118,4 +121,21 @@ function playSound(soundUrl) {
         
         audio.play().catch(err => {})
     } catch (error) {}
+}
+
+function handleKick(channelId) {
+    const channelElement = document.getElementById(channelId)
+    if (channelElement) {
+        channelElement.remove()
+    }
+    
+    if (getCookie("room") === channelId) {
+        document.cookie = "room=public; path=/"
+        const publicChannel = document.getElementById("public")
+        if (publicChannel) {
+            publicChannel.click()
+        } else {
+            window.location.reload()
+        }
+    }
 }

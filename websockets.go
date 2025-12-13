@@ -31,9 +31,16 @@ type BroadcastMessage struct {
 	data      []byte
 }
 
+type KickMessage struct {
+	userID    uint
+	channelID string
+	data      []byte
+}
+
 type Hub struct {
 	clients    map[*Client]bool
 	broadcast  chan BroadcastMessage
+	kick       chan KickMessage
 	register   chan *Client
 	unregister chan *Client
 	mu         sync.RWMutex
@@ -43,6 +50,7 @@ func newHub() *Hub {
 	return &Hub{
 		clients:    make(map[*Client]bool),
 		broadcast:  make(chan BroadcastMessage),
+		kick:       make(chan KickMessage),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
@@ -70,6 +78,20 @@ func (h *Hub) run() {
 				if client.channelID == message.channelID {
 					select {
 					case client.send <- message.data:
+					default:
+						close(client.send)
+						delete(h.clients, client)
+					}
+				}
+			}
+			h.mu.RUnlock()
+
+		case kick := <-h.kick:
+			h.mu.RLock()
+			for client := range h.clients {
+				if client.userID == kick.userID && client.channelID == kick.channelID {
+					select {
+					case client.send <- kick.data:
 					default:
 						close(client.send)
 						delete(h.clients, client)

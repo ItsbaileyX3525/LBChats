@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"html"
 	"log"
@@ -314,6 +315,101 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			)
 
 			c.Redirect(302, "/login")
+		})
+
+		protectedApi.POST("kickMember", func(c *gin.Context) {
+			type bodyData struct {
+				ChannelID string `json:"channel_id"`
+				KickUser  string `json:"kick_user"`
+			}
+
+			var body bodyData
+			var err error
+			err = c.ShouldBindBodyWithJSON(&body)
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "invalid post data", "error": err.Error()})
+				return
+			}
+
+			var channelOwner uint
+			var channelID = body.ChannelID
+			var userKick = body.KickUser
+			var userID uint = c.GetUint("userID")
+			var channel Channel
+			var hasPerms bool = false
+			var validUser uint
+
+			err = db.Raw(
+				"SELECT user_id FROM user_channels WHERE user_id = ? AND channel_id = ?",
+				userKick,
+				channelID,
+			).Scan(&validUser).Error
+
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "databse error"})
+				return
+			}
+
+			if validUser == 0 {
+				c.JSON(200, gin.H{"status": "error", "message": "user not in channel"})
+				return
+			}
+
+			err = db.Raw(
+				"SELECT owner_id FROM channels WHERE id = ?",
+				channelID,
+			).Scan(&channelOwner).Error
+			if err == sql.ErrNoRows {
+				c.JSON(200, gin.H{"status": "error", "message": "channel doesn't exist"})
+				return
+			}
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "database error"})
+				return
+			}
+
+			db.First(&channel, "id = ?", channelID)
+
+			var moderators []uint
+			json.Unmarshal(channel.Moderators, &moderators)
+
+			for _, v := range moderators {
+				if userID == v {
+					hasPerms = true
+					break
+				}
+			}
+
+			if channelOwner == userID {
+				hasPerms = true
+			}
+
+			if !hasPerms {
+				c.JSON(200, gin.H{"status": "error", "message": "invalid permissions"})
+				return
+			}
+
+			err = db.Exec(
+				"DELETE FROM user_channels WHERE user_id = ? AND channel_id = ?",
+				userKick,
+				channelID,
+			).Error
+			if err != nil {
+				c.JSON(200, gin.H{"status": "error", "message": "error kicking user"})
+				return
+			}
+
+			kickData, _ := json.Marshal(map[string]interface{}{
+				"type":       "kick",
+				"channel_id": channelID,
+			})
+			hub.kick <- KickMessage{
+				userID:    validUser,
+				channelID: channelID,
+				data:      kickData,
+			}
+
+			c.JSON(200, gin.H{"status": "success", "message": fmt.Sprintf("kicked user: %s", userKick)})
 		})
 
 		protectedApi.POST("changeProfile", func(c *gin.Context) {
@@ -703,6 +799,18 @@ func serveEndpoints(router *gin.Engine, db *gorm.DB) {
 			}
 
 			var userID uint = c.GetUint("userID")
+			var inChannel uint
+
+			db.Raw(
+				"SELECT user_id FROM user_channels WHERE user_id = ? AND channel_id = ?",
+				userID,
+				body.ChannelID,
+			).Scan(&inChannel)
+
+			if inChannel == 0 {
+				c.JSON(200, gin.H{"status": "error", "message": "you are not in this channel"})
+				return
+			}
 
 			var username string
 			var scanErr *gorm.DB = db.Raw(

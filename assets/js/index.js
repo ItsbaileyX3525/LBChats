@@ -404,6 +404,7 @@ async function loadMessages() {
             
             div.classList.add("message", "other")
             img.classList.add("message-avatar")
+            div.dataset.userId = e.UserID || e.user_id || ""
             messageBody.classList.add("message-body")
             messageHeader.classList.add("message-header")
             span.classList.add("message-username")
@@ -455,6 +456,7 @@ async function loadMessages() {
             
             div.classList.add("message", "other")
             img.classList.add("message-avatar")
+            div.dataset.userId = e.UserID || e.user_id || ""
             messageBody.classList.add("message-body")
             messageHeader.classList.add("message-header")
             span.classList.add("message-username")
@@ -580,3 +582,82 @@ logoutBtn.addEventListener("click", () => {
 settingsBtn.addEventListener("click", () => {
     window.location.href = "/settings"
 })
+
+// Context Menu
+const contextMenu = document.getElementById("messageContextMenu")
+const copyUserIdBtn = document.getElementById("copyUserId")
+const copyUsernameBtn = document.getElementById("copyUsername")
+const copyMessageContentBtn = document.getElementById("copyMessageContent")
+
+var currentContextTarget = null
+
+function showContextMenu(e, messageElement) {
+    e.preventDefault()
+    currentContextTarget = messageElement
+    
+    var x = e.clientX
+    var y = e.clientY
+    
+    if (x + 180 > window.innerWidth) {
+        x = window.innerWidth - 190
+    }
+    if (y + 120 > window.innerHeight) {
+        y = window.innerHeight - 130
+    }
+    
+    contextMenu.style.left = x + "px"
+    contextMenu.style.top = y + "px"
+    contextMenu.style.display = "block"
+}
+
+function hideContextMenu() {
+    contextMenu.style.display = "none"
+    currentContextTarget = null
+}
+
+if (messageContainer) {
+    messageContainer.addEventListener("contextmenu", (e) => {
+        var msg = e.target.closest(".message")
+        if (msg) {
+            showContextMenu(e, msg)
+        }
+    })
+}
+
+document.addEventListener("click", (e) => {
+    if (contextMenu && !contextMenu.contains(e.target)) {
+        hideContextMenu()
+    }
+})
+
+if (copyUserIdBtn) {
+    copyUserIdBtn.addEventListener("click", () => {
+        if (currentContextTarget) {
+            var userId = currentContextTarget.dataset.userId || "Unknown"
+            navigator.clipboard.writeText(userId)
+            hideContextMenu()
+        }
+    })
+}
+
+if (copyUsernameBtn) {
+    copyUsernameBtn.addEventListener("click", () => {
+        if (currentContextTarget) {
+            var usernameEl = currentContextTarget.querySelector(".message-username")
+            var username = usernameEl ? usernameEl.textContent : ""
+            navigator.clipboard.writeText(username)
+            hideContextMenu()
+        }
+    })
+}
+
+if (copyMessageContentBtn) {
+    copyMessageContentBtn.addEventListener("click", () => {
+        if (currentContextTarget) {
+            var contentEl = currentContextTarget.querySelector(".message-content")
+            var content = contentEl ? contentEl.textContent : ""
+            navigator.clipboard.writeText(content)
+            hideContextMenu()
+        }
+    })
+}

@@ -102,6 +102,36 @@ export const wordLists = {
     "/sounds": async function() {
         addSystemMessage("Available sounds: 67, chestnut, chestnutesFull, diddyblud, dui, enrique, ez4ence, flashbang, gatito, teto")
     },
+    "/kick" : async function(args) {
+        let roomID = getCookie("room")
+        console.log(args)
+
+        if (roomID === "public") {
+            addSystemMessage("Invalid permissions")
+            return
+        }
+
+        const resp = await fetch("/api/kickMember", {
+            method: "POST",
+            body: JSON.stringify({
+                "channel_id" : roomID,
+                "kick_user": args,
+            })
+        })
+
+        if (!resp.ok) {
+            addSystemMessage("Error with fetch request, try again")
+            return
+        }
+
+        const data = await resp.json()
+
+        if (data.status && data.status == "success") {
+            addSystemMessage(data.message)
+        } else {
+            addSystemMessage(data.message)
+        }
+    },
     "/leaveGroup": async function() {
         let roomID = getCookie("room")
         

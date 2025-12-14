@@ -32,6 +32,7 @@ CREATE TABLE `users` (
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
+  `profile_picture` varchar(255) NULL,
   `banned_channels` JSON DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -65,6 +66,7 @@ CREATE TABLE `messages` (
   `username` varchar(255) NOT NULL,
   `channel_id` varchar(255) NOT NULL,
   `content` varchar(1000) NOT NULL,
+  `profile_picture` varchar(255) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
@@ -85,6 +87,7 @@ CREATE TABLE `sessions` (
   `user_id` int(11) NOT NULL,
   `email` varchar(255) NOT NULL,
   `username` varchar(255) NOT NULL,
+  `profile_picture` varchar(255) DEFAULT NULL,
   `expires_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
